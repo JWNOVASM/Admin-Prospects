@@ -1,0 +1,296 @@
+function render_prospects_shortcode() {
+    if (!current_user_can('administrator') && !current_user_can('account_manager')) {
+        return 'You do not have permission to view this page';
+    }
+	
+	global $wpdb;
+    $table_name = $wpdb->prefix . 'prospects'; // Use the correct table name
+    $prospects = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'live'");
+
+    ob_start();
+    ?>
+    <div id="prospects-section">
+        <h2>Live Prospects</h2>
+        <table id="live_prospects">
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Instagram</th>
+				<th>Email</th>
+				<th>Phone</th>
+				<th>Client Type</th>
+				<th>Prospect Type</th>
+				<th>Status</th>
+				<th>Temperature</th>
+				<th>Last Updated</th>
+				<th>Account Manager</th>
+				<th>Success</th>
+				<th>Delete</th>
+			</tr>
+			<?php foreach ($prospects as $prospect) { ?>
+			<tr>
+				<td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
+				<td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
+				<td class='live_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+				<td class='live_email'><?php echo esc_html($prospect->email); ?></td>
+				<td class='live_phone'><?php echo esc_html($prospect->phone); ?></td>
+				<td class='live_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+				<td class='live_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+				<td class='live_status'><?php echo esc_html($prospect->status); ?></td>
+				<td class='live_temperature'><?php echo esc_html($prospect->temperature); ?></td>
+				<td class='live_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
+				<td class='live_account_manager'><?php echo esc_html($prospect->account_manager); ?></td>
+				<td class='live_success'><button class='prospect_success'>Success</button></td>
+				<td class='live_lost'><button class='prospect_lost'>Lost</button></td>
+			</tr>
+			<?php } ?>
+		</table>
+        <button id="add_prospect_btn">Add Prospect</button>
+        <div id="add_prospect_form" style="display:none;">
+            <h3>Add Prospect</h3>
+            <form id="add_prospect">
+                <input type="text" name="name" placeholder="Name" required>
+                <input type="text" name="instagram" placeholder="Instagram" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="text" name="phone" placeholder="Phone" required>
+                <select name="client_type">
+                    <option value="Lash Technician">Lash Technician</option>
+                    <option value="Salon Owner">Salon Owner</option>
+                    <option value="Salon Business">Salon Business</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select name="prospect_type">
+                    <option value="Customer">Customer</option>
+                    <option value="Brand Partner">Brand Partner</option>
+                    <option value="Salon Partner">Salon Partner</option>
+                    <option value="Other">Other</option>
+                </select>
+                <button type="submit">Add Prospect</button>
+            </form>
+        </div>
+        <h2>Successful Prospects</h2>
+        <div class="accordion">
+            <button class="accordion-btn">Successful Prospects</button>
+            <div class="accordion-content">
+                <table id="successful_prospects">
+                    <tr>
+                        <th>Name</th>
+                        <th>Instagram</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Client Type</th>
+                        <th>Prospect Type</th>
+                        <th>Last Updated</th>
+                        <th>Account Manager</th>
+                        <th>Move to Live</th>
+                    </tr>
+                    <?php foreach ($prospects as $prospect) : ?>
+                        <?php if ($prospect->prospect_status == 'success') : ?>
+                            <tr>
+                                <td class='success_name'><?php echo esc_html($prospect->name); ?></td>
+                                <td class='success_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+                                <td class='success_email'><?php echo esc_html($prospect->email); ?></td>
+                                <td class='success_phone'><?php echo esc_html($prospect->phone); ?></td>
+                                <td class='success_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+                                <td class='success_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+                                <td class='success_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
+                                <td class='success_account_manager'><?php echo esc_html($prospect->account_manager); ?></td>
+                                <td class='success_to_live'><button class='button_success_to_live'>Move to live</button></td>
+                            </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </table>
+            </div>
+        </div>
+        <h2>Lost Prospects</h2>
+        <div class="accordion">
+            <button class="accordion-btn">Lost Prospects</button>
+            <div class="accordion-content">
+                <table id="lost_prospects">
+                    <tr>
+                        <th>Name</th>
+                        <th>Instagram</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Client Type</th>
+                        <th>Prospect Type</th>
+                        <th>Last Updated</th>
+                        <th>Reason for Loss</th>
+                        <th>Account Manager</th>
+                        <th>Reactivate</th>
+                    </tr>
+                    <?php foreach ($prospects as $prospect) : ?>
+                        <?php if ($prospect->prospect_status == 'lost') : ?>
+                            <tr>
+                                <td class='lost_name'><?php echo esc_html($prospect->name); ?></td>
+                                <td class='lost_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+                                <td class='lost_email'><?php echo esc_html($prospect->email); ?></td>
+                                <td class='lost_phone'><?php echo esc_html($prospect->phone); ?></td>
+                                <td class='lost_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+                                <td class='lost_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+                                <td class='lost_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
+                                <td class='lost_reason'><?php echo esc_html($prospect->reason_for_loss); ?></td>
+                                <td class='lost_account_manager'><?php echo esc_html($prospect->account_manager); ?></td>
+                                <td class='lost_to_live'><button class='button_lost_to_live'>Move to live</button></td>
+                            </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </table>
+            </div>
+        </div>
+    </div>
+    <style>
+        /* Add necessary CSS here */
+    </style>
+    <script>
+	document.getElementById('add_prospect_btn').addEventListener('click', function() {
+		document.getElementById('add_prospect_form').style.display = 'block';
+	});
+	document.getElementById('add_prospect').addEventListener('submit', function(event) {
+		event.preventDefault();
+		// Handle form submission to add a new prospect
+		// Use AJAX to send data to a PHP handler that will insert the data into the database
+	});
+	document.addEventListener('DOMContentLoaded', function() {
+		// Toggle the add prospect form
+		document.getElementById('add_prospect_btn').addEventListener('click', function() {
+			document.getElementById('add_prospect_form').style.display = 'block';
+		});
+
+		// Handle form submission to add a new prospect
+		document.getElementById('add_prospect').addEventListener('submit', function(event) {
+			event.preventDefault();
+
+			let formData = new FormData(this);
+			formData.append('action', 'add_prospect');
+			formData.append('nonce', '<?php echo wp_create_nonce('add_prospect_nonce'); ?>');
+
+			fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+				method: 'POST',
+				body: formData
+			})
+				.then(response => response.text())
+				.then(data => {
+					alert(data);
+					location.reload(); // Reload the page to see the new prospect
+				})
+				.catch(error => console.error('Error:', error));
+		});
+
+		// Accordion functionality
+		document.querySelectorAll('.accordion-btn').forEach(button => {
+			button.addEventListener('click', () => {
+				const accordionContent = button.nextElementSibling;
+				button.classList.toggle('accordion-btn-active');
+				if (button.classList.contains('accordion-btn-active')) {
+					accordionContent.style.maxHeight = accordionContent.scrollHeight + 'px';
+				} else {
+					accordionContent.style.maxHeight = 0;
+				}
+			});
+		});
+
+		// Handle success and lost buttons
+		document.querySelectorAll('.prospect_success').forEach(button => {
+			button.addEventListener('click', function() {
+				// Move row to successful prospects table
+				let row = this.closest('tr');
+				moveProspect(row, 'success');
+			});
+		});
+
+		document.querySelectorAll('.prospect_lost').forEach(button => {
+			button.addEventListener('click', function() {
+				// Move row to lost prospects table
+				let row = this.closest('tr');
+				moveProspect(row, 'lost');
+			});
+		});
+
+		function moveProspect(row, status) {
+			let formData = new FormData();
+			formData.append('action', 'move_prospect');
+			formData.append('id', row.querySelector('.live_ID').textContent);
+			formData.append('status', status);
+			formData.append('nonce', '<?php echo wp_create_nonce('move_prospect_nonce'); ?>');
+
+			fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+				method: 'POST',
+				body: formData
+			})
+				.then(response => response.text())
+				.then(data => {
+					alert(data);
+					location.reload(); // Reload the page to reflect the changes
+				})
+				.catch(error => console.error('Error:', error));
+		}
+	});
+				// Additional JavaScript for handling success, lost, and reactivation of prospects
+        // Add the JavaScript code provided in the previous step here
+    </script>
+    <?php
+    return ob_get_clean();
+}
+add_shortcode('prospects', 'render_prospects_shortcode');
+
+function add_prospect() {
+    // Verify nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'add_prospect_nonce')) {
+        die('Invalid nonce');
+    }
+
+    // Sanitize and validate input data
+    $name = sanitize_text_field($_POST['name']);
+    $instagram = sanitize_text_field($_POST['instagram']);
+    $email = sanitize_email($_POST['email']);
+    $phone = sanitize_text_field($_POST['phone']);
+    $client_type = sanitize_text_field($_POST['client_type']);
+    $prospect_type = sanitize_text_field($_POST['prospect_type']);
+    $account_manager = wp_get_current_user()->user_login;
+
+    // Insert data into the database
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'prospects';
+    $wpdb->insert($table_name, [
+        'name' => $name,
+        'instagram' => $instagram,
+        'email' => $email,
+        'phone' => $phone,
+        'client_type' => $client_type,
+        'prospect_type' => $prospect_type,
+        'status' => 'Not engaged',
+        'temperature' => 'Cold',
+        'last_updated' => current_time('mysql'),
+        'account_manager' => $account_manager,
+        'prospect_status' => 'live'
+    ]);
+
+    echo 'Prospect added successfully';
+    wp_die();
+}
+add_action('wp_ajax_add_prospect', 'add_prospect');
+
+function move_prospect() {
+    // Verify nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'move_prospect_nonce')) {
+        die('Invalid nonce');
+    }
+
+    // Validate and sanitize input
+    $id = intval($_POST['id']);
+    $status = sanitize_text_field($_POST['status']);
+
+    // Update the prospect's status in the database
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'prospects';
+    $wpdb->update(
+        $table_name,
+        ['prospect_status' => $status],
+        ['id' => $id]
+    );
+
+    echo 'Prospect moved successfully';
+    wp_die();
+}
+add_action('wp_ajax_move_prospect', 'move_prospect');
