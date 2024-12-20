@@ -6,7 +6,18 @@ function render_prospects_shortcode() {
 	global $wpdb;
     $table_name = $wpdb->prefix . 'prospects'; // Use the correct table name
     $prospects = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'live'");
+	
+	global $wpdb;
+    $table_name = $wpdb->prefix . 'prospects';
 
+    // Fetching live prospects
+    $prospects_live = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'live'");
+
+    // Fetching successful prospects
+    $prospects_success = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'success'");
+
+    // Fetching lost prospects
+    $prospects_lost = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'lost'");
     ob_start();
     ?>
     <div id="prospects-section">
@@ -284,13 +295,18 @@ function move_prospect() {
     // Update the prospect's status in the database
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospects';
-    $wpdb->update(
+    $result = $wpdb->update(
         $table_name,
         ['prospect_status' => $status],
         ['id' => $id]
     );
 
-    echo 'Prospect moved successfully';
+    if ($result === false) {
+        error_log('Failed to update prospect status for ID: ' . $id);
+        echo 'Error moving prospect';
+    } else {
+        echo 'Prospect moved successfully';
+    }
     wp_die();
 }
 add_action('wp_ajax_move_prospect', 'move_prospect');
