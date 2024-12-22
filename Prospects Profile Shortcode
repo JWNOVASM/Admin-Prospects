@@ -1,20 +1,30 @@
-function render_prospect_profile($atts) {
-    // Get the prospect ID from the query parameter if not provided in the shortcode attributes
-    if (!isset($atts['id']) || !$atts['id']) {
-        $atts['id'] = isset($_GET['prospect_id']) ? intval($_GET['prospect_id']) : 0;
+function prospect_profile_page() {
+    if (!current_user_can('administrator') && !current_user_can('account_manager')) {
+        return 'You do not have permission to view this page.';
     }
 
-    if ($atts['id'] == 0) {
-        return 'Invalid Prospect ID';
+    if (!isset($_GET['prospect_id'])) {
+        return 'Invalid prospect ID.';
     }
 
+    $prospect_id = intval($_GET['prospect_id']);
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospects';
-    $prospect = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $atts['id']));
+    $prospect = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $prospect_id));
 
     if (!$prospect) {
-        return 'Prospect not found';
+        return 'Prospect not found.';
     }
+
+    $current_user = wp_get_current_user();
+    $account_manager_id = get_user_meta($prospect->ID, 'assigned_account_manager', true);
+
+    if (in_array('account_manager', $current_user->roles) && $current_user->ID != $account_manager_id) {
+        return 'You do not have permission to view this prospect.';
+    }
+
+    $account_manager = get_userdata($account_manager_id);
+    $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
 
     ob_start();
     ?>
@@ -31,11 +41,11 @@ function render_prospect_profile($atts) {
         <p><strong>Account Manager:</strong> <?php echo esc_html($prospect->account_manager); ?></p>
         <h3>Notes</h3>
         <div class="prospect-notes">
-            <?php echo do_shortcode('[prospect_notes prospect_id="' . $atts['id'] . '"]'); ?>
+            <?php echo do_shortcode('[prospect_notes prospect_id="' . $prospect_id . '"]'); ?>
         </div>
         <form id="add_note_form">
             <textarea name="note" placeholder="Add a note" required></textarea>
-            <input type="hidden" name="prospect_id" value="<?php echo esc_attr($atts['id']); ?>">
+            <input type="hidden" name="prospect_id" value="<?php echo esc_attr($prospect_id); ?>">
             <button type="submit">Add Note</button>
         </form>
     </div>
@@ -54,7 +64,7 @@ function render_prospect_profile($atts) {
     <?php
     return ob_get_clean();
 }
-add_shortcode('prospect_profile', 'render_prospect_profile');
+add_shortcode('prospect_profile', 'prospect_profile_page');
 
 function add_prospect_note() {
     // Verify nonce for security
@@ -105,28 +115,3 @@ function display_prospect_notes($atts) {
     return ob_get_clean();
 }
 add_shortcode('prospect_notes', 'display_prospect_notes');
-
-function create_prospect_post_type() {
-    $labels = array(
-        'name' => __('Prospects'),
-        'singular_name' => __('Prospect'),
-    );
-    $args = array(
-        'labels' => $labels,
-        'public' => true,
-        'has_archive' => false,
-        'rewrite' => array('slug' => 'admin/prospects/profile'),
-        'supports' => array('title', 'editor'),
-    );
-    register_post_type('prospect', $args);
-}
-add_action('init', 'create_prospect_post_type');
-
-function custom_rewrite_rules() {
-    add_rewrite_rule(
-        '^admin/prospects/profile/([0-9]+)?',
-        'index.php?post_type=prospect&p=$matches[1]',
-        'top'
-    );
-}
-add_action('init', 'custom_rewrite_rules');
