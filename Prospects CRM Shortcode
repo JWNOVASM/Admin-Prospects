@@ -38,7 +38,7 @@ function render_prospects_shortcode() {
             <?php foreach ($prospects_live as $prospect) { ?>
             <tr>
                 <td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
-                <td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
+                <td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
                 <td class='live_instagram'><?php echo esc_html($prospect->instagram); ?></td>
                 <td class='live_email'><?php echo esc_html($prospect->email); ?></td>
                 <td class='live_phone'><?php echo esc_html($prospect->phone); ?></td>
@@ -82,6 +82,7 @@ function render_prospects_shortcode() {
             <div class="accordion-content">
                 <table id="successful_prospects">
                     <tr>
+                        <th>ID</th>
                         <th>Name</th>
                         <th>Instagram</th>
                         <th>Email</th>
@@ -94,7 +95,8 @@ function render_prospects_shortcode() {
                     </tr>
                     <?php foreach ($prospects_success as $prospect) { ?>
                     <tr>
-                        <td class='success_name'><?php echo esc_html($prospect->name); ?></td>
+                        <td class='success_ID'><?php echo esc_html($prospect->id); ?></td>
+                        <td class='success_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
                         <td class='success_instagram'><?php echo esc_html($prospect->instagram); ?></td>
                         <td class='success_email'><?php echo esc_html($prospect->email); ?></td>
                         <td class='success_phone'><?php echo esc_html($prospect->phone); ?></td>
@@ -114,6 +116,7 @@ function render_prospects_shortcode() {
             <div class="accordion-content">
                 <table id="lost_prospects">
                     <tr>
+                        <th>ID</th>
                         <th>Name</th>
                         <th>Instagram</th>
                         <th>Email</th>
@@ -127,7 +130,8 @@ function render_prospects_shortcode() {
                     </tr>
                     <?php foreach ($prospects_lost as $prospect) { ?>
                     <tr>
-                        <td class='lost_name'><?php echo esc_html($prospect->name); ?></td>
+                        <td class='lost_ID'><?php echo esc_html($prospect->id); ?></td>
+                        <td class='lost_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
                         <td class='lost_instagram'><?php echo esc_html($prospect->instagram); ?></td>
                         <td class='lost_email'><?php echo esc_html($prospect->email); ?></td>
                         <td class='lost_phone'><?php echo esc_html($prospect->phone); ?></td>
@@ -223,7 +227,7 @@ function render_prospects_shortcode() {
         function moveProspect(row, status) {
             let formData = new FormData();
             formData.append('action', 'move_prospect');
-            formData.append('id', row.querySelector('.live_ID') ? row.querySelector('.live_ID').textContent : row.querySelector('.success_name').textContent);
+            formData.append('id', row.querySelector('.live_ID') ? row.querySelector('.live_ID').textContent : row.querySelector('.success_ID').textContent);
             formData.append('status', status);
             formData.append('nonce', '<?php echo wp_create_nonce('move_prospect_nonce'); ?>');
 
@@ -291,6 +295,10 @@ function move_prospect() {
     // Validate and sanitize input
     $id = intval($_POST['id']);
     $status = sanitize_text_field($_POST['status']);
+
+    // Debugging logs
+    error_log('Move Prospect ID: ' . $id);
+    error_log('Move Prospect Status: ' . $status);
 
     // Update the prospect's status in the database
     global $wpdb;
