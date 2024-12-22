@@ -143,9 +143,6 @@ function render_prospects_shortcode() {
             </div>
         </div>
     </div>
-    <style>
-        /* Add necessary CSS here */
-    </style>
     <script>
     document.getElementById('add_prospect_btn').addEventListener('click', function() {
         document.getElementById('add_prospect_form').style.display = 'block';
@@ -209,10 +206,24 @@ function render_prospects_shortcode() {
             });
         });
 
+        document.querySelectorAll('.button_success_to_live').forEach(button => {
+            button.addEventListener('click', function() {
+                let row = this.closest('tr');
+                moveProspect(row, 'live');
+            });
+        });
+
+        document.querySelectorAll('.button_lost_to_live').forEach(button => {
+            button.addEventListener('click', function() {
+                let row = this.closest('tr');
+                moveProspect(row, 'live');
+            });
+        });
+
         function moveProspect(row, status) {
             let formData = new FormData();
             formData.append('action', 'move_prospect');
-            formData.append('id', row.querySelector('.live_ID').textContent);
+            formData.append('id', row.querySelector('.live_ID') ? row.querySelector('.live_ID').textContent : row.querySelector('.success_name').textContent);
             formData.append('status', status);
             formData.append('nonce', '<?php echo wp_create_nonce('move_prospect_nonce'); ?>');
 
@@ -299,22 +310,3 @@ function move_prospect() {
     wp_die();
 }
 add_action('wp_ajax_move_prospect', 'move_prospect');
-
-function moveProspect(row, status) {
-    let formData = new FormData();
-    formData.append('action', 'move_prospect');
-    formData.append('id', row.querySelector('.live_ID').textContent);
-    formData.append('status', status);
-    formData.append('nonce', '<?php echo wp_create_nonce('move_prospect_nonce'); ?>');
-
-    fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.text())
-    .then(data => {
-        alert(data);
-        location.reload(); // Ensure the page reloads to update tables
-    })
-    .catch(error => console.error('Error:', error));
-}
