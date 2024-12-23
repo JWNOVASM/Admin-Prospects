@@ -94,73 +94,76 @@ function prospect_profile_page() {
         <button id="return_to_prospects" onclick="window.location.href='https://kliko.co.uk/admin/prospects';">Return to prospects</button>
     </div>
     <script>
-		jQuery(document).ready(function($) {
-			$('#add_note_form').on('submit', function(event) {
-				event.preventDefault();
-				var formData = $(this).serialize();
-				$.post('<?php echo admin_url('admin-ajax.php'); ?>', formData + '&action=add_prospect_note', function(response) {
-					location.reload();
-				});
-			});
+        jQuery(document).ready(function($) {
+            $('#add_note_form').on('submit', function(event) {
+                event.preventDefault();
+                var formData = $(this).serialize();
+                $.post('<?php echo admin_url('admin-ajax.php'); ?>', formData + '&action=add_prospect_note', function(response) {
+                    // Update the DOM to reflect the new note without reloading
+                    $('.prospect-notes').append('<li><strong><?php echo $current_user->display_name; ?>:</strong> ' + formData.get('note') + ' <em>(<?php echo current_time('mysql'); ?>)</em> <button class="delete-note" data-note-id="' + response.note_id + '">Delete</button></li>');
+                });
+            });
 
-			// Update status, temperature, and account manager
-			$('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').change(function() {
-				var select = $(this);
-				var oldValue = select.data('old-value');
-				var newValue = select.val();
-				var field = select.attr('id').replace('prospect_', '');
-				var fieldName = select.prev('strong').text().replace(':', '');
+            // Update status, temperature, and account manager
+            $('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').change(function() {
+                var select = $(this);
+                var oldValue = select.data('old-value');
+                var newValue = select.val();
+                var field = select.attr('id').replace('prospect_', '');
+                var fieldName = select.prev('strong').text().replace(':', '');
 
-				if (oldValue !== newValue) {
-					var formData = {
-						action: 'update_prospect_field',
-						prospect_id: <?php echo $prospect_id; ?>,
-						field: field,
-						value: newValue,
-						nonce: '<?php echo wp_create_nonce('update_prospect_nonce'); ?>'
-					};
+                if (oldValue !== newValue) {
+                    var formData = {
+                        action: 'update_prospect_field',
+                        prospect_id: <?php echo $prospect_id; ?>,
+                        field: field,
+                        value: newValue,
+                        nonce: '<?php echo wp_create_nonce('update_prospect_nonce'); ?>'
+                    };
 
-					$.post('<?php echo admin_url('admin-ajax.php'); ?>', formData, function(response) {
-						if (response === 'success') {
-							var oldName = oldValue === '0' ? 'Unassigned' : $('#prospect_account_manager option[value="' + oldValue + '"]').text();
-							var newName = newValue === '0' ? 'Unassigned' : $('#prospect_account_manager option[value="' + newValue + '"]').text();
-							var noteText = '<?php echo $current_user->display_name; ?> changed ' + fieldName + ' from ' + oldName + ' to ' + newName;
-							$.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-								action: 'add_prospect_note',
-								prospect_id: <?php echo $prospect_id; ?>,
-								note: noteText,
-								nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
-							}, function(noteResponse) {
-								location.reload();
-							});
-						}
-					});
-				}
-			});
+                    $.post('<?php echo admin_url('admin-ajax.php'); ?>', formData, function(response) {
+                        if (response === 'success') {
+                            var oldName = oldValue === '0' ? 'Unassigned' : $('#prospect_account_manager option[value="' + oldValue + '"]').text();
+                            var newName = newValue === '0' ? 'Unassigned' : $('#prospect_account_manager option[value="' + newValue + '"]').text();
+                            var noteText = '<?php echo $current_user->display_name; ?> changed ' + fieldName + ' from ' + oldName + ' to ' + newName;
+                            $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+                                action: 'add_prospect_note',
+                                prospect_id: <?php echo $prospect_id; ?>,
+                                note: noteText,
+                                nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
+                            }, function(noteResponse) {
+                                // Update the DOM to reflect the new note without reloading
+                                $('.prospect-notes').append('<li><strong><?php echo $current_user->display_name; ?>:</strong> ' + noteText + ' <em>(<?php echo current_time('mysql'); ?>)</em> <button class="delete-note" data-note-id="' + noteResponse.note_id + '">Delete</button></li>');
+                            });
+                        }
+                    });
+                }
+            });
 
-			// Delete notes (only for administrators)
-			$('.prospect-notes').on('click', '.delete-note', function() {
-				if (confirm('Are you sure you want to delete this note?')) {
-					var noteId = $(this).data('note-id');
-					var nonce = '<?php echo wp_create_nonce('delete_note_nonce'); ?>';
+            // Delete notes (only for administrators)
+            $('.prospect-notes').on('click', '.delete-note', function() {
+                if (confirm('Are you sure you want to delete this note?')) {
+                    var noteId = $(this).data('note-id');
+                    var nonce = '<?php echo wp_create_nonce('delete_note_nonce'); ?>';
 
-					$.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-						action: 'delete_prospect_note',
-						note_id: noteId,
-						nonce: nonce
-					}, function(response) {
-						location.reload();
-					});
-				}
-			});
+                    $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+                        action: 'delete_prospect_note',
+                        note_id: noteId,
+                        nonce: nonce
+                    }, function(response) {
+                        // Update the DOM to remove the deleted note without reloading
+                        $(this).parent().remove();
+                    });
+                }
+            });
 
-			// Scroll to the bottom of the notes container by default
-			var notesContainer = $('.prospect-notes');
-			if (notesContainer[0].scrollHeight > notesContainer.height()) {
-				notesContainer.scrollTop(notesContainer[0].scrollHeight);
-			}
-		});
-	</script>
+            // Scroll to the bottom of the notes container by default
+            var notesContainer = $('.prospect-notes');
+            if (notesContainer[0].scrollHeight > notesContainer.height()) {
+                notesContainer.scrollTop(notesContainer[0].scrollHeight);
+            }
+        });
+    </script>
     <?php
     return ob_get_clean();
 }
@@ -184,7 +187,7 @@ function add_prospect_note() {
         'timestamp' => current_time('mysql')
     ]);
 
-    echo 'Note added successfully';
+    echo json_encode(['note_id' => $wpdb->insert_id]);
     wp_die();
 }
 add_action('wp_ajax_add_prospect_note', 'add_prospect_note');
