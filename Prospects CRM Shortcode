@@ -50,7 +50,7 @@ function render_prospects_shortcode() {
 					// error_log("Prospect ID: " . $prospect->id);
 					// error_log("Account Manager Data: " . print_r($account_manager, true));
 
-					$account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+					$account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'Unassigned';
 
 					// Debugging statement to log the account manager name
 					// error_log("Account Manager Name: " . $account_manager_name);
@@ -130,7 +130,7 @@ function render_prospects_shortcode() {
 					<tbody>
 						<?php foreach ($prospects_success as $prospect) {
 							$account_manager = get_userdata($prospect->account_manager_id);
-							$account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+							$account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'Unassigned';
 
 							$last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
 							$last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
@@ -175,7 +175,7 @@ function render_prospects_shortcode() {
                     <tbody>
                         <?php foreach ($prospects_lost as $prospect) {
                             $account_manager = get_userdata($prospect->account_manager);
-                            $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+                            $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'Unassigned';
 
                             $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
                             $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
