@@ -80,24 +80,33 @@ function render_prospects_shortcode() {
         <div id="add_prospect_form" style="display:none;">
             <h3>Add Prospect</h3>
             <form id="add_prospect">
-                <input type="text" name="name" placeholder="Name" required>
-                <input type="text" name="instagram" placeholder="Instagram" required>
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="text" name="phone" placeholder="Phone" required>
-                <select name="client_type">
-                    <option value="Lash Technician">Lash Technician</option>
-                    <option value="Salon Owner">Salon Owner</option>
-                    <option value="Salon Business">Salon Business</option>
-                    <option value="Other">Other</option>
-                </select>
-                <select name="prospect_type">
-                    <option value="Customer">Customer</option>
-                    <option value="Brand Partner">Brand Partner</option>
-                    <option value="Salon Partner">Salon Partner</option>
-                    <option value="Other">Other</option>
-                </select>
-                <button type="submit">Add Prospect</button>
-            </form>
+				<input type="text" name="name" placeholder="Name" required>
+				<input type="text" name="instagram" placeholder="Instagram" required>
+				<input type="email" name="email" placeholder="Email" required>
+				<input type="text" name="phone" placeholder="Phone" required>
+				<select name="client_type">
+					<option value="Lash Technician">Lash Technician</option>
+					<option value="Salon Owner">Salon Owner</option>
+					<option value="Salon Business">Salon Business</option>
+					<option value="Other">Other</option>
+				</select>
+				<select name="prospect_type">
+					<option value="Customer">Customer</option>
+					<option value="Brand Partner">Brand Partner</option>
+					<option value="Salon Partner">Salon Partner</option>
+					<option value="Other">Other</option>
+				</select>
+				<select name="account_manager_id">
+					<option value="0">Unassigned</option> <!-- Added Unassigned option -->
+					<?php
+					$users = get_users(array('role' => 'account_manager'));
+					foreach ($users as $user) {
+						echo '<option value="' . esc_html($user->ID) . '">' . esc_html($user->first_name . ' ' . $user->last_name) . '</option>';
+					}
+					?>
+				</select>
+				<button type="submit">Add Prospect</button>
+			</form>
         </div>
         <h2>Successful Prospects</h2>
         <div class="accordion">
@@ -314,21 +323,18 @@ function render_prospects_shortcode() {
 add_shortcode('prospects', 'render_prospects_shortcode');
 
 function add_prospect() {
-    // Verify nonce for security
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'add_prospect_nonce')) {
         die('Invalid nonce');
     }
 
-    // Sanitize and validate input data
     $name = sanitize_text_field($_POST['name']);
     $instagram = sanitize_text_field($_POST['instagram']);
     $email = sanitize_email($_POST['email']);
     $phone = sanitize_text_field($_POST['phone']);
     $client_type = sanitize_text_field($_POST['client_type']);
     $prospect_type = sanitize_text_field($_POST['prospect_type']);
-    $account_manager = wp_get_current_user()->user_login;
+    $account_manager_id = intval($_POST['account_manager_id']);
 
-    // Insert data into the database
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospects';
     $wpdb->insert($table_name, [
@@ -341,7 +347,7 @@ function add_prospect() {
         'status' => 'Not engaged',
         'temperature' => 'Cold',
         'last_updated' => current_time('mysql'),
-        'account_manager' => $account_manager,
+        'account_manager_id' => $account_manager_id,
         'prospect_status' => 'live'
     ]);
 
