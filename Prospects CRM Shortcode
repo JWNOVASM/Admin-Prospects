@@ -15,43 +15,54 @@ function render_prospects_shortcode() {
     // Fetching lost prospects
     $prospects_lost = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'lost'");
 
+    // Enqueue DataTables and jQuery scripts/styles
+    wp_enqueue_script('datatables-js', 'https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js', ['jquery'], null, true);
+    wp_enqueue_style('datatables-css', 'https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css');
+
     ob_start();
     ?>
     <div id="prospects-section">
         <h2>Live Prospects</h2>
-        <table id="live_prospects">
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Instagram</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Client Type</th>
-                <th>Prospect Type</th>
-                <th>Status</th>
-                <th>Temperature</th>
-                <th>Last Updated</th>
-                <th>Account Manager</th>
-                <th>Success</th>
-                <th>Delete</th>
-            </tr>
-            <?php foreach ($prospects_live as $prospect) { ?>
-            <tr>
-                <td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
-                <td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
-                <td class='live_instagram'><?php echo esc_html($prospect->instagram); ?></td>
-                <td class='live_email'><?php echo esc_html($prospect->email); ?></td>
-                <td class='live_phone'><?php echo esc_html($prospect->phone); ?></td>
-                <td class='live_client_type'><?php echo esc_html($prospect->client_type); ?></td>
-                <td class='live_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
-                <td class='live_status'><?php echo esc_html($prospect->status); ?></td>
-                <td class='live_temperature'><?php echo esc_html($prospect->temperature); ?></td>
-                <td class='live_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
-                <td class='live_account_manager'><?php echo esc_html($prospect->account_manager); ?></td>
-                <td class='live_success'><button class='prospect_success'>Success</button></td>
-                <td class='live_lost'><button class='prospect_lost'>Lost</button></td>
-            </tr>
-            <?php } ?>
+        <table id="live_prospects" class="display">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Instagram</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Client Type</th>
+                    <th>Prospect Type</th>
+                    <th>Status</th>
+                    <th>Temperature</th>
+                    <th>Last Updated</th>
+                    <th>Account Manager</th>
+                    <th>Success</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($prospects_live as $prospect) {
+                    $account_manager = get_userdata($prospect->account_manager);
+                    $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+                ?>
+                <tr>
+                    <td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
+                    <td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
+                    <td class='live_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+                    <td class='live_email'><?php echo esc_html($prospect->email); ?></td>
+                    <td class='live_phone'><?php echo esc_html($prospect->phone); ?></td>
+                    <td class='live_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+                    <td class='live_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+                    <td class='live_status'><?php echo esc_html($prospect->status); ?></td>
+                    <td class='live_temperature'><?php echo esc_html($prospect->temperature); ?></td>
+                    <td class='live_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
+                    <td class='live_account_manager'><?php echo esc_html($account_manager_name); ?></td>
+                    <td class='live_success'><button class='prospect_success'>Success</button></td>
+                    <td class='live_lost'><button class='prospect_lost'>Lost</button></td>
+                </tr>
+                <?php } ?>
+            </tbody>
         </table>
         <button id="add_prospect_btn">Add Prospect</button>
         <div id="add_prospect_form" style="display:none;">
@@ -80,33 +91,40 @@ function render_prospects_shortcode() {
         <div class="accordion">
             <button class="accordion-btn">Successful Prospects</button>
             <div class="accordion-content">
-                <table id="successful_prospects">
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Instagram</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Client Type</th>
-                        <th>Prospect Type</th>
-                        <th>Last Updated</th>
-                        <th>Account Manager</th>
-                        <th>Move to Live</th>
-                    </tr>
-                    <?php foreach ($prospects_success as $prospect) { ?>
-                    <tr>
-                        <td class='success_ID'><?php echo esc_html($prospect->id); ?></td>
-                        <td class='success_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
-                        <td class='success_instagram'><?php echo esc_html($prospect->instagram); ?></td>
-                        <td class='success_email'><?php echo esc_html($prospect->email); ?></td>
-                        <td class='success_phone'><?php echo esc_html($prospect->phone); ?></td>
-                        <td class='success_client_type'><?php echo esc_html($prospect->client_type); ?></td>
-                        <td class='success_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
-                        <td class='success_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
-                        <td class='success_account_manager'><?php echo esc_html($prospect->account_manager); ?></td>
-                        <td class='success_to_live'><button class='button_success_to_live'>Move to live</button></td>
-                    </tr>
-                    <?php } ?>
+                <table id="successful_prospects" class="display">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Instagram</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Client Type</th>
+                            <th>Prospect Type</th>
+                            <th>Last Updated</th>
+                            <th>Account Manager</th>
+                            <th>Move to Live</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($prospects_success as $prospect) {
+                            $account_manager = get_userdata($prospect->account_manager);
+                            $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+                        ?>
+                        <tr>
+                            <td class='success_ID'><?php echo esc_html($prospect->id); ?></td>
+                            <td class='success_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
+                            <td class='success_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+                            <td class='success_email'><?php echo esc_html($prospect->email); ?></td>
+                            <td class='success_phone'><?php echo esc_html($prospect->phone); ?></td>
+                            <td class='success_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+                            <td class='success_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+                            <td class='success_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
+                            <td class='success_account_manager'><?php echo esc_html($account_manager_name); ?></td>
+                            <td class='success_to_live'><button class='button_success_to_live'>Move to live</button></td>
+                        </tr>
+                        <?php } ?>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -114,35 +132,42 @@ function render_prospects_shortcode() {
         <div class="accordion">
             <button class="accordion-btn">Lost Prospects</button>
             <div class="accordion-content">
-                <table id="lost_prospects">
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Instagram</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Client Type</th>
-                        <th>Prospect Type</th>
-                        <th>Last Updated</th>
-                        <th>Reason for Loss</th>
-                        <th>Account Manager</th>
-                        <th>Reactivate</th>
-                    </tr>
-                    <?php foreach ($prospects_lost as $prospect) { ?>
-                    <tr>
-                        <td class='lost_ID'><?php echo esc_html($prospect->id); ?></td>
-                        <td class='lost_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
-                        <td class='lost_instagram'><?php echo esc_html($prospect->instagram); ?></td>
-                        <td class='lost_email'><?php echo esc_html($prospect->email); ?></td>
-                        <td class='lost_phone'><?php echo esc_html($prospect->phone); ?></td>
-                        <td class='lost_client_type'><?php echo esc_html($prospect->client_type); ?></td>
-                        <td class='lost_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
-                        <td class='lost_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
-                        <td class='lost_reason'><?php echo esc_html($prospect->reason_for_loss); ?></td>
-                        <td class='lost_account_manager'><?php echo esc_html($prospect->account_manager); ?></td>
-                        <td class='lost_to_live'><button class='button_lost_to_live'>Move to live</button></td>
-                    </tr>
-                    <?php } ?>
+                <table id="lost_prospects" class="display">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Instagram</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Client Type</th>
+                            <th>Prospect Type</th>
+                            <th>Last Updated</th>
+                            <th>Reason for Loss</th>
+                            <th>Account Manager</th>
+                            <th>Reactivate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($prospects_lost as $prospect) {
+                            $account_manager = get_userdata($prospect->account_manager);
+                            $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+                        ?>
+                        <tr>
+                            <td class='lost_ID'><?php echo esc_html($prospect->id); ?></td>
+                            <td class='lost_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
+                            <td class='lost_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+                            <td class='lost_email'><?php echo esc_html($prospect->email); ?></td>
+                            <td class='lost_phone'><?php echo esc_html($prospect->phone); ?></td>
+                            <td class='lost_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+                            <td class='lost_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+                            <td class='lost_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
+                            <td class='lost_reason'><?php echo esc_html($prospect->reason_for_loss); ?></td>
+                            <td class='lost_account_manager'><?php echo esc_html($account_manager_name); ?></td>
+                            <td class='lost_to_live'><button class='button_lost_to_live'>Move to live</button></td>
+                        </tr>
+                        <?php } ?>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -176,7 +201,7 @@ function render_prospects_shortcode() {
             })
                 .then(response => response.text())
                 .then(data => {
-                    alert(data);
+                    // alert(data);
                     location.reload(); // Reload the page to see the new prospect
                 })
                 .catch(error => console.error('Error:', error));
@@ -237,11 +262,16 @@ function render_prospects_shortcode() {
             })
                 .then(response => response.text())
                 .then(data => {
-                    alert(data);
+                    // alert(data);
                     location.reload(); // Reload the page to reflect the changes
                 })
                 .catch(error => console.error('Error:', error));
         }
+
+        // Initialize DataTables
+        $('#live_prospects').DataTable();
+        $('#successful_prospects').DataTable();
+        $('#lost_prospects').DataTable();
     });
     </script>
     <?php
@@ -297,8 +327,8 @@ function move_prospect() {
     $status = sanitize_text_field($_POST['status']);
 
     // Debugging logs
-    error_log('Move Prospect ID: ' . $id);
-    error_log('Move Prospect Status: ' . $status);
+    // error_log('Move Prospect ID: ' . $id);
+    // error_log('Move Prospect Status: ' . $status);
 
     // Update the prospect's status in the database
     global $wpdb;
@@ -310,7 +340,7 @@ function move_prospect() {
     );
 
     if ($result === false) {
-        error_log('Failed to update prospect status for ID: ' . $id);
+        // error_log('Failed to update prospect status for ID: ' . $id);
         echo 'Error moving prospect';
     } else {
         echo 'Prospect moved successfully';
