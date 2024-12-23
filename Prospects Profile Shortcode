@@ -17,7 +17,7 @@ function prospect_profile_page() {
     }
 
     $current_user = wp_get_current_user();
-    $account_manager_id = get_user_meta($prospect->id, 'assigned_account_manager', true); // Corrected property name
+    $account_manager_id = get_user_meta($prospect->id, 'assigned_account_manager', true);
 
     if (in_array('account_manager', $current_user->roles) && $current_user->ID != $account_manager_id) {
         return 'You do not have permission to view this prospect.';
@@ -33,20 +33,58 @@ function prospect_profile_page() {
         <p><strong>Instagram:</strong> <a href="https://www.instagram.com/<?php echo esc_html($prospect->instagram); ?>" target="_blank"><?php echo esc_html($prospect->instagram); ?></a></p>
         <p><strong>Email:</strong> <a href="mailto:<?php echo esc_html($prospect->email); ?>"><?php echo esc_html($prospect->email); ?></a></p>
         <p><strong>Phone:</strong> <a href="tel:<?php echo esc_html($prospect->phone); ?>"><?php echo esc_html($prospect->phone); ?></a></p>
-        <p><strong>Client Type:</strong> <?php echo esc_html($prospect->client_type); ?></p>
-        <p><strong>Prospect Type:</strong> <?php echo esc_html($prospect->prospect_type); ?></p>
-        <p><strong>Status:</strong> <?php echo esc_html($prospect->status); ?></p>
-        <p><strong>Temperature:</strong> <?php echo esc_html($prospect->temperature); ?></p>
+        <p><strong>Client Type:</strong>
+            <select id="prospect_client_type" data-old-value="<?php echo esc_html($prospect->client_type); ?>">
+                <option value="Lash Technician" <?php selected($prospect->client_type, 'Lash Technician'); ?>>Lash Technician</option>
+                <option value="Salon Owner" <?php selected($prospect->client_type, 'Salon Owner'); ?>>Salon Owner</option>
+                <option value="Salon Business" <?php selected($prospect->client_type, 'Salon Business'); ?>>Salon Business</option>
+                <option value="Other" <?php selected($prospect->client_type, 'Other'); ?>>Other</option>
+            </select>
+        </p>
+        <p><strong>Prospect Type:</strong>
+            <select id="prospect_prospect_type" data-old-value="<?php echo esc_html($prospect->prospect_type); ?>">
+                <option value="Customer" <?php selected($prospect->prospect_type, 'Customer'); ?>>Customer</option>
+                <option value="Brand Partner" <?php selected($prospect->prospect_type, 'Brand Partner'); ?>>Brand Partner</option>
+                <option value="Salon Partner" <?php selected($prospect->prospect_type, 'Salon Partner'); ?>>Salon Partner</option>
+                <option value="Other" <?php selected($prospect->prospect_type, 'Other'); ?>>Other</option>
+            </select>
+        </p>
+        <p><strong>Status:</strong> 
+            <select id="prospect_status" data-old-value="<?php echo esc_html($prospect->status); ?>">
+                <option value="Not engaged" <?php selected($prospect->status, 'Not engaged'); ?>>Not engaged</option>
+                <option value="Engaged" <?php selected($prospect->status, 'Engaged'); ?>>Engaged</option>
+            </select>
+        </p>
+        <p><strong>Temperature:</strong> 
+            <select id="prospect_temperature" data-old-value="<?php echo esc_html($prospect->temperature); ?>">
+                <option value="Cold" <?php selected($prospect->temperature, 'Cold'); ?>>Cold</option>
+                <option value="Warm" <?php selected($prospect->temperature, 'Warm'); ?>>Warm</option>
+                <option value="Hot" <?php selected($prospect->temperature, 'Hot'); ?>>Hot</option>
+            </select>
+        </p>
         <p><strong>Last Updated:</strong> <?php echo esc_html($prospect->last_updated); ?></p>
-        <p><strong>Account Manager:</strong> <?php echo esc_html($prospect->account_manager); ?></p>
+        <p><strong>Account Manager:</strong> 
+            <?php if (current_user_can('administrator')): ?>
+                <select id="prospect_account_manager" data-old-value="<?php echo esc_html($prospect->account_manager); ?>">
+                    <?php
+                    $users = get_users(array('role' => 'account_manager'));
+                    foreach ($users as $user) {
+                        echo '<option value="' . esc_html($user->user_login) . '" ' . selected($prospect->account_manager, $user->user_login, false) . '>' . esc_html($user->first_name . ' ' . $user->last_name) . '</option>';
+                    }
+                    ?>
+                </select>
+            <?php else: ?>
+                <?php echo esc_html($account_manager_name); ?>
+            <?php endif; ?>
+        </p>
         <h3>Notes</h3>
-        <div class="prospect-notes">
+        <div class="prospect-notes" style="max-height: 100px; overflow-y: scroll;">
             <?php echo do_shortcode('[prospect_notes prospect_id="' . $prospect_id . '"]'); ?>
         </div>
         <form id="add_note_form">
             <textarea name="note" placeholder="Add a note" required></textarea>
             <input type="hidden" name="prospect_id" value="<?php echo esc_attr($prospect_id); ?>">
-            <input type="hidden" name="nonce" value="<?php echo wp_create_nonce('add_note_nonce'); ?>"> <!-- Added nonce field -->
+            <input type="hidden" name="nonce" value="<?php echo wp_create_nonce('add_note_nonce'); ?>">
             <button type="submit">Add Note</button>
         </form>
     </div>
@@ -56,10 +94,69 @@ function prospect_profile_page() {
                 event.preventDefault();
                 var formData = $(this).serialize();
                 $.post('<?php echo admin_url('admin-ajax.php'); ?>', formData + '&action=add_prospect_note', function(response) {
-                    alert(response);
+                    // alert(response);
                     location.reload();
                 });
             });
+
+            // Update status, temperature, and account manager
+            $('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').change(function() {
+                var select = $(this);
+                var oldValue = select.data('old-value');
+                var newValue = select.val();
+                var field = select.attr('id').replace('prospect_', '');
+                var fieldName = select.prev('strong').text().replace(':', '');
+
+                if (oldValue !== newValue) {
+                    var formData = {
+                        action: 'update_prospect_field',
+                        prospect_id: <?php echo $prospect_id; ?>,
+                        field: field,
+                        value: newValue,
+                        nonce: '<?php echo wp_create_nonce('update_prospect_nonce'); ?>'
+                    };
+
+                    $.post('<?php echo admin_url('admin-ajax.php'); ?>', formData, function(response) {
+                        if (response === 'success') {
+                            var noteText = '<?php echo $current_user->display_name; ?> changed ' + fieldName + ' from ' + oldValue + ' to ' + newValue;
+                            $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+                                action: 'add_prospect_note',
+                                prospect_id: <?php echo $prospect_id; ?>,
+                                note: noteText,
+                                nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
+                            }, function(noteResponse) {
+                                // alert(noteResponse);
+                                location.reload();
+                            });
+                        } else {
+                            // alert('Error updating ' + fieldName);
+                        }
+                    });
+                }
+            });
+
+            // Delete notes (only for administrators)
+            $('.prospect-notes').on('click', '.delete-note', function() {
+                if (confirm('Are you sure you want to delete this note?')) {
+                    var noteId = $(this).data('note-id');
+                    var nonce = '<?php echo wp_create_nonce('delete_note_nonce'); ?>';
+
+                    $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+                        action: 'delete_prospect_note',
+                        note_id: noteId,
+                        nonce: nonce
+                    }, function(response) {
+                        // alert(response);
+                        location.reload();
+                    });
+                }
+            });
+
+            // Scroll to the bottom of the notes container by default
+            var notesContainer = $('.prospect-notes');
+            if (notesContainer[0].scrollHeight > notesContainer.height()) {
+                notesContainer.scrollTop(notesContainer[0].scrollHeight);
+            }
         });
     </script>
     <?php
@@ -68,17 +165,14 @@ function prospect_profile_page() {
 add_shortcode('prospect_profile', 'prospect_profile_page');
 
 function add_prospect_note() {
-    // Verify nonce for security
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'add_note_nonce')) {
         die('Invalid nonce');
     }
 
-    // Sanitize and validate input data
     $prospect_id = intval($_POST['prospect_id']);
     $note = sanitize_textarea_field($_POST['note']);
     $user = wp_get_current_user();
 
-    // Insert note into the database
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospect_notes';
     $wpdb->insert($table_name, [
@@ -93,11 +187,27 @@ function add_prospect_note() {
 }
 add_action('wp_ajax_add_prospect_note', 'add_prospect_note');
 
+function delete_prospect_note() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'delete_note_nonce')) {
+        die('Invalid nonce');
+    }
+
+    $note_id = intval($_POST['note_id']);
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'prospect_notes';
+    $wpdb->delete($table_name, ['id' => $note_id]);
+
+    echo 'Note deleted successfully';
+    wp_die();
+}
+add_action('wp_ajax_delete_prospect_note', 'delete_prospect_note');
+
 function display_prospect_notes($atts) {
     $prospect_id = intval($atts['prospect_id']);
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospect_notes';
-    $notes = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_id = %d ORDER BY timestamp DESC", $prospect_id));
+    $notes = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_id = %d ORDER BY timestamp ASC", $prospect_id));
 
     ob_start();
     if (!empty($notes)) {
@@ -107,6 +217,9 @@ function display_prospect_notes($atts) {
             echo '<strong>' . esc_html($note->user) . ':</strong> ';
             echo esc_html($note->note);
             echo ' <em>(' . esc_html($note->timestamp) . ')</em>';
+            if (current_user_can('administrator')) {
+                echo ' <button class="delete-note" data-note-id="' . esc_html($note->id) . '">Delete</button>';
+            }
             echo '</li>';
         }
         echo '</ul>';
@@ -116,3 +229,25 @@ function display_prospect_notes($atts) {
     return ob_get_clean();
 }
 add_shortcode('prospect_notes', 'display_prospect_notes');
+
+function update_prospect_field() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'update_prospect_nonce')) {
+        die('Invalid nonce');
+    }
+
+    $prospect_id = intval($_POST['prospect_id']);
+    $field = sanitize_text_field($_POST['field']);
+    $value = sanitize_text_field($_POST['value']);
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'prospects';
+    $result = $wpdb->update($table_name, [$field => $value], ['id' => $prospect_id]);
+
+    if ($result !== false) {
+        echo 'success';
+    } else {
+        echo 'error';
+    }
+    wp_die();
+}
+add_action('wp_ajax_update_prospect_field', 'update_prospect_field');
