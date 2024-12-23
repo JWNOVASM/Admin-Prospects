@@ -26,19 +26,23 @@ function render_prospects_shortcode() {
         <table id="live_prospects" class="display">
             <thead>
 				<tr>
-					<th>ID</th>
-					<th>Name</th>
-					<th>Instagram</th>
-					<th>Email</th>
-					<th>Phone</th>
-					<th>Client Type</th>
-					<th>Prospect Type</th>
-					<th>Status</th>
-					<th>Temperature</th>
-					<th>Last Updated</th>
-					<th>Account Manager</th>
-					<th>Success</th>
-					<th>Delete</th>
+					<thead>
+					<tr>
+						<th>ID</th>
+						<th>Name</th>
+						<th>Instagram</th>
+						<th>Email</th>
+						<th>Phone</th>
+						<th>Client Type</th>
+						<th>Prospect Type</th>
+						<th>Status</th>
+						<th>Temperature</th>
+						<th>Last Updated</th>
+						<th>Account Manager</th>
+						<th>Success</th>
+						<th>Delete</th>
+					</tr>
+				</thead>
 				</tr>
 			</thead>
             <tbody>
@@ -252,6 +256,7 @@ function render_prospects_shortcode() {
 				let newRow = row.clone();
 				console.log('Columns before removal:', newRow.children('td').length);
 
+				// Ensure the number of columns matches the target table's headers
 				if (status === 'success') {
 					newRow.find('.live_client_type, .live_prospect_type, .live_status, .live_temperature, .live_success, .live_lost').remove();
 					newRow.find('.live_last_updated').attr('class', 'success_last_updated');
