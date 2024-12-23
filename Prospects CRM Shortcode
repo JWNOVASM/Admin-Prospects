@@ -25,26 +25,22 @@ function render_prospects_shortcode() {
         <h2>Live Prospects</h2>
         <table id="live_prospects" class="display">
             <thead>
-				<tr>
-					<thead>
-					<tr>
-						<th>ID</th>
-						<th>Name</th>
-						<th>Instagram</th>
-						<th>Email</th>
-						<th>Phone</th>
-						<th>Client Type</th>
-						<th>Prospect Type</th>
-						<th>Status</th>
-						<th>Temperature</th>
-						<th>Last Updated</th>
-						<th>Account Manager</th>
-						<th>Success</th>
-						<th>Delete</th>
-					</tr>
-				</thead>
-				</tr>
-			</thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Instagram</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Client Type</th>
+                    <th>Prospect Type</th>
+                    <th>Status</th>
+                    <th>Temperature</th>
+                    <th>Last Updated</th>
+                    <th>Account Manager</th>
+                    <th>Success</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
             <tbody>
                 <?php foreach ($prospects_live as $prospect) {
                     $account_manager = get_userdata($prospect->account_manager_id);
@@ -114,8 +110,6 @@ function render_prospects_shortcode() {
                             <th>Instagram</th>
                             <th>Email</th>
                             <th>Phone</th>
-                            <th>Client Type</th>
-                            <th>Prospect Type</th>
                             <th>Last Updated</th>
                             <th>Account Manager</th>
                             <th>Move to Live</th>
@@ -134,8 +128,6 @@ function render_prospects_shortcode() {
                             <td class='success_instagram'><?php echo esc_html($prospect->instagram); ?></td>
                             <td class='success_email'><?php echo esc_html($prospect->email); ?></td>
                             <td class='success_phone'><?php echo esc_html($prospect->phone); ?></td>
-                            <td class='success_client_type'><?php echo esc_html($prospect->client_type); ?></td>
-                            <td class='success_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
                             <td class='success_last_updated'><?php echo esc_html($last_updated); ?></td>
                             <td class='success_account_manager'><?php echo esc_html($account_manager_name); ?></td>
                             <td class='success_move_to_live'><button class='button_success_to_live'>Move to live</button></td>
@@ -151,20 +143,18 @@ function render_prospects_shortcode() {
             <div class="accordion-content">
                 <table id="lost_prospects" class="display">
                     <thead>
-						<tr>
-							<th>ID</th>
-							<th>Name</th>
-							<th>Instagram</th>
-							<th>Email</th>
-							<th>Phone</th>
-							<th>Client Type</th>
-							<th>Prospect Type</th>
-							<th>Last Updated</th>
-							<th>Reason for Loss</th>
-							<th>Account Manager</th>
-							<th>Reactivate</th>
-						</tr>
-					</thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Instagram</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Last Updated</th>
+                            <th>Reason for Loss</th>
+                            <th>Account Manager</th>
+                            <th>Reactivate</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php foreach ($prospects_lost as $prospect) {
                             $account_manager = get_userdata($prospect->account_manager_id);
@@ -229,12 +219,12 @@ function render_prospects_shortcode() {
         });
 
         // Handle success and lost buttons
-		$(document).on('click', '.prospect_success, .prospect_lost, .button_success_to_live, .button_lost_to_live', function() {
-			let row = $(this).closest('tr');
-			let status = $(this).hasClass('prospect_success') ? 'success' :
-			$(this).hasClass('prospect_lost') ? 'lost' : 'live';
-			moveProspect(row, status);
-		});
+        $(document).on('click', '.prospect_success, .prospect_lost, .button_success_to_live, .button_lost_to_live', function() {
+            let row = $(this).closest('tr');
+            let status = $(this).hasClass('prospect_success') ? 'success' :
+                         $(this).hasClass('prospect_lost') ? 'lost' : 'live';
+            moveProspect(row, status);
+        });
 
         function moveProspect(row, status) {
 			let formData = new FormData();
@@ -256,7 +246,6 @@ function render_prospects_shortcode() {
 				let newRow = row.clone();
 				console.log('Columns before removal:', newRow.children('td').length);
 
-				// Ensure the number of columns matches the target table's headers
 				if (status === 'success') {
 					newRow.find('.live_client_type, .live_prospect_type, .live_status, .live_temperature, .live_success, .live_lost').remove();
 					newRow.find('.live_last_updated').attr('class', 'success_last_updated');
@@ -275,10 +264,9 @@ function render_prospects_shortcode() {
 					$('#lost_prospects').DataTable().row.add(newRow).draw();
 				} else {
 					newRow.find('.success_move_to_live, .lost_reason, .lost_move_to_live').remove();
-					newRow.append('<td class="live_client_type">Unassigned</td><td class="live_prospect_type">Unassigned</td><td class="live_success"><button class="prospect_success">Success</button></td><td class="live_lost"><button class="prospect_lost">Lost</button></td>');
-					let table = row.closest('table').attr('id');
+					newRow.append('<td class="live_client_type">Unassigned</td><td class="live_prospect_type">Unassigned</td><td class="live_status">Unassigned</td><td class="live_temperature">Unassigned</td><td class="live_last_updated">Unassigned</td><td class="live_account_manager">Unassigned</td><td class="live_success"><button class="prospect_success">Success</button></td><td class="live_lost"><button class="prospect_lost">Lost</button></td>');
 					console.log('Columns after removal and addition (live):', newRow.children('td').length);
-					$('#'+table).DataTable().row(row).remove().draw();
+					$('#live_prospects').DataTable().row(row).remove().draw();
 					$('#live_prospects').DataTable().row.add(newRow).draw();
 				}
 			})
