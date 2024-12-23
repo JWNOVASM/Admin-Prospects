@@ -233,40 +233,59 @@ function render_prospects_shortcode() {
 			formData.append('status', status);
 			formData.append('nonce', '<?php echo wp_create_nonce('move_prospect_nonce'); ?>');
 
-			console.log(`Moving prospect with ID: ${formData.get('id')} to status: ${status}`);
-			console.log(`Current columns: ${row.children('td').length}`);
-
 			fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
 				method: 'POST',
 				body: formData
 			})
 			.then(response => response.text())
 			.then(data => {
-				console.log('Server response:', data);
 				let newRow = row.clone();
-				console.log('Columns before removal:', newRow.children('td').length);
+				let accountManager = newRow.find('.live_account_manager, .success_account_manager, .lost_account_manager').text();
 
 				if (status === 'success') {
-					newRow.find('.live_client_type, .live_prospect_type, .live_status, .live_temperature, .live_success, .live_lost').remove();
-					newRow.find('.live_last_updated').attr('class', 'success_last_updated');
-					newRow.find('.live_account_manager').attr('class', 'success_account_manager');
-					newRow.append('<td class="success_move_to_live"><button class="button_success_to_live">Move to live</button></td>');
-					console.log('Columns after removal and addition (success):', newRow.children('td').length);
+					newRow.html(`
+						<td class='success_ID'>${newRow.find('.live_ID').text()}</td>
+						<td class='success_name'>${newRow.find('.live_name').html()}</td>
+						<td class='success_instagram'>${newRow.find('.live_instagram').text()}</td>
+						<td class='success_email'>${newRow.find('.live_email').text()}</td>
+						<td class='success_phone'>${newRow.find('.live_phone').text()}</td>
+						<td class='success_last_updated'>${newRow.find('.live_last_updated').text()}</td>
+						<td class='success_account_manager'>${accountManager}</td>
+						<td class="success_move_to_live"><button class="button_success_to_live">Move to live</button></td>
+					`);
 					$('#live_prospects').DataTable().row(row).remove().draw();
 					$('#successful_prospects').DataTable().row.add(newRow).draw();
 				} else if (status === 'lost') {
-					newRow.find('.live_client_type, .live_prospect_type, .live_status, .live_temperature, .live_success, .live_lost').remove();
-					newRow.find('.live_last_updated').attr('class', 'lost_last_updated');
-					newRow.find('.live_account_manager').attr('class', 'lost_reason');
-					newRow.append('<td class="lost_move_to_live"><button class="button_lost_to_live">Move to live</button></td>');
-					console.log('Columns after removal and addition (lost):', newRow.children('td').length);
+					newRow.html(`
+						<td class='lost_ID'>${newRow.find('.live_ID').text()}</td>
+						<td class='lost_name'>${newRow.find('.live_name').html()}</td>
+						<td class='lost_instagram'>${newRow.find('.live_instagram').text()}</td>
+						<td class='lost_email'>${newRow.find('.live_email').text()}</td>
+						<td class='lost_phone'>${newRow.find('.live_phone').text()}</td>
+						<td class='lost_last_updated'>${newRow.find('.live_last_updated').text()}</td>
+						<td class='lost_reason'>${newRow.find('.live_status').text()}</td>
+						<td class='lost_account_manager'>${accountManager}</td>
+						<td class="lost_move_to_live"><button class="button_lost_to_live">Move to live</button></td>
+					`);
 					$('#live_prospects').DataTable().row(row).remove().draw();
 					$('#lost_prospects').DataTable().row.add(newRow).draw();
 				} else {
-					newRow.find('.success_move_to_live, .lost_reason, .lost_move_to_live').remove();
-					newRow.append('<td class="live_client_type">Unassigned</td><td class="live_prospect_type">Unassigned</td><td class="live_status">Unassigned</td><td class="live_temperature">Unassigned</td><td class="live_last_updated">Unassigned</td><td class="live_account_manager">Unassigned</td><td class="live_success"><button class="prospect_success">Success</button></td><td class="live_lost"><button class="prospect_lost">Lost</button></td>');
-					console.log('Columns after removal and addition (live):', newRow.children('td').length);
-					$('#live_prospects').DataTable().row(row).remove().draw();
+					newRow.html(`
+						<td class='live_ID'>${newRow.find('.success_ID, .lost_ID').text()}</td>
+						<td class='live_name'>${newRow.find('.success_name, .lost_name').html()}</td>
+						<td class='live_instagram'>${newRow.find('.success_instagram, .lost_instagram').text()}</td>
+						<td class='live_email'>${newRow.find('.success_email, .lost_email').text()}</td>
+						<td class='live_phone'>${newRow.find('.success_phone, .lost_phone').text()}</td>
+						<td class='live_client_type'>Unassigned</td>
+						<td class='live_prospect_type'>Unassigned</td>
+						<td class='live_status'>Unassigned</td>
+						<td class='live_temperature'>Unassigned</td>
+						<td class='live_last_updated'>${newRow.find('.success_last_updated, .lost_last_updated').text()}</td>
+						<td class='live_account_manager'>${accountManager}</td>
+						<td class='live_success'><button class='prospect_success'>Success</button></td>
+						<td class='live_lost'><button class='prospect_lost'>Lost</button></td>
+					`);
+					$('#successful_prospects, #lost_prospects').DataTable().row(row).remove().draw();
 					$('#live_prospects').DataTable().row.add(newRow).draw();
 				}
 			})
