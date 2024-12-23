@@ -67,19 +67,20 @@ function prospect_profile_page() {
         </p>
         <p><strong>Last Updated:</strong> <?php echo esc_html($last_updated); ?></p>
         <p><strong>Account Manager:</strong> 
-            <?php if (current_user_can('administrator')): ?>
-                <select id="prospect_account_manager" data-old-value="<?php echo esc_html($prospect->account_manager); ?>">
-                    <?php
-                    $users = get_users(array('role' => 'account_manager'));
-                    foreach ($users as $user) {
-                        echo '<option value="' . esc_html($user->user_login) . '" ' . selected($prospect->account_manager, $user->user_login, false) . '>' . esc_html($user->first_name . ' ' . $user->last_name) . '</option>';
-                    }
-                    ?>
-                </select>
-            <?php else: ?>
-                <?php echo esc_html($account_manager_name); ?>
-            <?php endif; ?>
-        </p>
+			<?php if (current_user_can('administrator')): ?>
+				<select id="prospect_account_manager" data-old-value="<?php echo esc_html($prospect->account_manager); ?>">
+					<option value="0">Unassigned</option> <!-- Added Unassigned option -->
+					<?php
+					$users = get_users(array('role' => 'account_manager'));
+					foreach ($users as $user) {
+						echo '<option value="' . esc_html($user->ID) . '" ' . selected($prospect->account_manager, $user->ID, false) . '>' . esc_html($user->first_name . ' ' . $user->last_name) . '</option>';
+					}
+					?>
+				</select>
+			<?php else: ?>
+				<?php echo esc_html($account_manager_name); ?>
+			<?php endif; ?>
+		</p>
         <h3>Notes</h3>
         <div class="prospect-notes" style="max-height: 100px; overflow-y: scroll;">
             <?php echo do_shortcode('[prospect_notes prospect_id="' . $prospect_id . '"]'); ?>
@@ -238,6 +239,11 @@ function update_prospect_field() {
     $prospect_id = intval($_POST['prospect_id']);
     $field = sanitize_text_field($_POST['field']);
     $value = sanitize_text_field($_POST['value']);
+
+    if ($field == 'account_manager') {
+        $field = 'account_manager_id';
+        $value = intval($value);
+    }
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospects';
