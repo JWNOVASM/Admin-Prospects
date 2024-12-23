@@ -45,6 +45,9 @@ function render_prospects_shortcode() {
                 <?php foreach ($prospects_live as $prospect) {
                     $account_manager = get_userdata($prospect->account_manager);
                     $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+
+                    $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
+                    $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
                 ?>
                 <tr>
                     <td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
@@ -56,7 +59,7 @@ function render_prospects_shortcode() {
                     <td class='live_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
                     <td class='live_status'><?php echo esc_html($prospect->status); ?></td>
                     <td class='live_temperature'><?php echo esc_html($prospect->temperature); ?></td>
-                    <td class='live_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
+                    <td class='live_last_updated'><?php echo esc_html($last_updated); ?></td>
                     <td class='live_account_manager'><?php echo esc_html($account_manager_name); ?></td>
                     <td class='live_success'><button class='prospect_success'>Success</button></td>
                     <td class='live_lost'><button class='prospect_lost'>Lost</button></td>
@@ -110,6 +113,9 @@ function render_prospects_shortcode() {
                         <?php foreach ($prospects_success as $prospect) {
                             $account_manager = get_userdata($prospect->account_manager);
                             $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+
+                            $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
+                            $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
                         ?>
                         <tr>
                             <td class='success_ID'><?php echo esc_html($prospect->id); ?></td>
@@ -119,7 +125,7 @@ function render_prospects_shortcode() {
                             <td class='success_phone'><?php echo esc_html($prospect->phone); ?></td>
                             <td class='success_client_type'><?php echo esc_html($prospect->client_type); ?></td>
                             <td class='success_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
-                            <td class='success_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
+                            <td class='success_last_updated'><?php echo esc_html($last_updated); ?></td>
                             <td class='success_account_manager'><?php echo esc_html($account_manager_name); ?></td>
                             <td class='success_to_live'><button class='button_success_to_live'>Move to live</button></td>
                         </tr>
@@ -152,6 +158,9 @@ function render_prospects_shortcode() {
                         <?php foreach ($prospects_lost as $prospect) {
                             $account_manager = get_userdata($prospect->account_manager);
                             $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+
+                            $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
+                            $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
                         ?>
                         <tr>
                             <td class='lost_ID'><?php echo esc_html($prospect->id); ?></td>
@@ -161,7 +170,7 @@ function render_prospects_shortcode() {
                             <td class='lost_phone'><?php echo esc_html($prospect->phone); ?></td>
                             <td class='lost_client_type'><?php echo esc_html($prospect->client_type); ?></td>
                             <td class='lost_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
-                            <td class='lost_last_updated'><?php echo esc_html($prospect->last_updated); ?></td>
+                            <td class='lost_last_updated'><?php echo esc_html($last_updated); ?></td>
                             <td class='lost_reason'><?php echo esc_html($prospect->reason_for_loss); ?></td>
                             <td class='lost_account_manager'><?php echo esc_html($account_manager_name); ?></td>
                             <td class='lost_to_live'><button class='button_lost_to_live'>Move to live</button></td>
@@ -201,7 +210,7 @@ function render_prospects_shortcode() {
             })
                 .then(response => response.text())
                 .then(data => {
-                    // alert(data);
+                    alert(data);
                     location.reload(); // Reload the page to see the new prospect
                 })
                 .catch(error => console.error('Error:', error));
@@ -262,16 +271,22 @@ function render_prospects_shortcode() {
             })
                 .then(response => response.text())
                 .then(data => {
-                    // alert(data);
+                    alert(data);
                     location.reload(); // Reload the page to reflect the changes
                 })
                 .catch(error => console.error('Error:', error));
         }
 
-        // Initialize DataTables
-        $('#live_prospects').DataTable();
-        $('#successful_prospects').DataTable();
-        $('#lost_prospects').DataTable();
+        // Initialize DataTables with 100 results per page
+        $('#live_prospects').DataTable({
+            "pageLength": 100
+        });
+        $('#successful_prospects').DataTable({
+            "pageLength": 100
+        });
+        $('#lost_prospects').DataTable({
+            "pageLength": 100
+        });
     });
     </script>
     <?php
