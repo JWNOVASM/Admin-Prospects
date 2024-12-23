@@ -43,115 +43,104 @@ function render_prospects_shortcode() {
             </thead>
             <tbody>
                 <?php foreach ($prospects_live as $prospect) {
-					// Fetch the account manager using the account manager ID instead of the prospect ID
-					$account_manager = get_userdata($prospect->account_manager_id); // Assume the correct field name is 'account_manager_id'
-
-					// Debugging statement to log the account manager data
-					// error_log("Prospect ID: " . $prospect->id);
-					// error_log("Account Manager Data: " . print_r($account_manager, true));
-
-					$account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'Unassigned';
-
-					// Debugging statement to log the account manager name
-					// error_log("Account Manager Name: " . $account_manager_name);
-
-					$last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
-					$last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
-				?>
-				<tr>
-					<td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
-					<td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
-					<td class='live_instagram'><?php echo esc_html($prospect->instagram); ?></td>
-					<td class='live_email'><?php echo esc_html($prospect->email); ?></td>
-					<td class='live_phone'><?php echo esc_html($prospect->phone); ?></td>
-					<td class='live_client_type'><?php echo esc_html($prospect->client_type); ?></td>
-					<td class='live_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
-					<td class='live_status'><?php echo esc_html($prospect->status); ?></td>
-					<td class='live_temperature'><?php echo esc_html($prospect->temperature); ?></td>
-					<td class='live_last_updated'><?php echo esc_html($last_updated); ?></td>
-					<td class='live_account_manager'><?php echo esc_html($account_manager_name); ?></td>
-					<td class='live_success'><button class='prospect_success'>Success</button></td>
-					<td class='live_lost'><button class='prospect_lost'>Lost</button></td>
-				</tr>
-				<?php } ?>
+                    $account_manager = get_userdata($prospect->account_manager_id);
+                    $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'Unassigned';
+                    $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
+                    $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
+                ?>
+                <tr>
+                    <td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
+                    <td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
+                    <td class='live_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+                    <td class='live_email'><?php echo esc_html($prospect->email); ?></td>
+                    <td class='live_phone'><?php echo esc_html($prospect->phone); ?></td>
+                    <td class='live_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+                    <td class='live_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+                    <td class='live_status'><?php echo esc_html($prospect->status); ?></td>
+                    <td class='live_temperature'><?php echo esc_html($prospect->temperature); ?></td>
+                    <td class='live_last_updated'><?php echo esc_html($last_updated); ?></td>
+                    <td class='live_account_manager'><?php echo esc_html($account_manager_name); ?></td>
+                    <td class='live_success'><button class='prospect_success'>Success</button></td>
+                    <td class='live_lost'><button class='prospect_lost'>Lost</button></td>
+                </tr>
+                <?php } ?>
             </tbody>
         </table>
         <button id="add_prospect_btn">Add Prospect</button>
         <div id="add_prospect_form" style="display:none;">
             <h3>Add Prospect</h3>
             <form id="add_prospect">
-				<input type="text" name="name" placeholder="Name" required>
-				<input type="text" name="instagram" placeholder="Instagram" required>
-				<input type="email" name="email" placeholder="Email" required>
-				<input type="text" name="phone" placeholder="Phone" required>
-				<select name="client_type">
-					<option value="Lash Technician">Lash Technician</option>
-					<option value="Salon Owner">Salon Owner</option>
-					<option value="Salon Business">Salon Business</option>
-					<option value="Other">Other</option>
-				</select>
-				<select name="prospect_type">
-					<option value="Customer">Customer</option>
-					<option value="Brand Partner">Brand Partner</option>
-					<option value="Salon Partner">Salon Partner</option>
-					<option value="Other">Other</option>
-				</select>
-				<select name="account_manager_id">
-					<option value="0">Unassigned</option> <!-- Added Unassigned option -->
-					<?php
-					$users = get_users(array('role' => 'account_manager'));
-					foreach ($users as $user) {
-						echo '<option value="' . esc_html($user->ID) . '">' . esc_html($user->first_name . ' ' . $user->last_name) . '</option>';
-					}
-					?>
-				</select>
-				<button type="submit">Add Prospect</button>
-			</form>
+                <input type="text" name="name" placeholder="Name" required>
+                <input type="text" name="instagram" placeholder="Instagram" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="text" name="phone" placeholder="Phone" required>
+                <select name="client_type">
+                    <option value="Lash Technician">Lash Technician</option>
+                    <option value="Salon Owner">Salon Owner</option>
+                    <option value="Salon Business">Salon Business</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select name="prospect_type">
+                    <option value="Customer">Customer</option>
+                    <option value="Brand Partner">Brand Partner</option>
+                    <option value="Salon Partner">Salon Partner</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select name="account_manager_id">
+                    <option value="0">Unassigned</option>
+                    <?php
+                    $users = get_users(array('role' => 'account_manager'));
+                    foreach ($users as $user) {
+                        echo '<option value="' . esc_html($user->ID) . '">' . esc_html($user->first_name . ' ' . $user->last_name) . '</option>';
+                    }
+                    ?>
+                </select>
+                <button type="submit">Add Prospect</button>
+            </form>
         </div>
         <h2>Successful Prospects</h2>
-		<div class="accordion">
-			<button class="accordion-btn">Successful Prospects</button>
-			<div class="accordion-content">
-				<table id="successful_prospects" class="display">
-					<thead>
-						<tr>
-							<th>ID</th>
-							<th>Name</th>
-							<th>Instagram</th>
-							<th>Email</th>
-							<th>Phone</th>
-							<th>Client Type</th>
-							<th>Prospect Type</th>
-							<th>Last Updated</th>
-							<th>Account Manager</th>
-							<th>Move to Live</th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ($prospects_success as $prospect) {
-							$account_manager = get_userdata($prospect->account_manager_id);
-							$account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'Unassigned';
-
-							$last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
-							$last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
-						?>
-						<tr>
-							<td class='success_ID'><?php echo esc_html($prospect->id); ?></td>
-							<td class='success_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
-							<td class='success_instagram'><?php echo esc_html($prospect->instagram); ?></td>
-							<td class='success_email'><?php echo esc_html($prospect->email); ?></td>
-							<td class='success_phone'><?php echo esc_html($prospect->phone); ?></td>
-							<td class='success_client_type'><?php echo esc_html($prospect->client_type); ?></td>
-							<td class='success_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
-							<td class='success_last_updated'><?php echo esc_html($last_updated); ?></td>
-							<td class='success_account_manager'><?php echo esc_html($account_manager_name); ?></td>
-							<td class='success_move_to_live'><button class='button_success_to_live'>Move to live</button></td>
-						</tr>
-						<?php } ?>
-					</tbody>
-				</table>
-			</div>
-		</div>
+        <div class="accordion">
+            <button class="accordion-btn">Successful Prospects</button>
+            <div class="accordion-content">
+                <table id="successful_prospects" class="display">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Instagram</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Client Type</th>
+                            <th>Prospect Type</th>
+                            <th>Last Updated</th>
+                            <th>Account Manager</th>
+                            <th>Move to Live</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($prospects_success as $prospect) {
+                            $account_manager = get_userdata($prospect->account_manager_id);
+                            $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'Unassigned';
+                            $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
+                            $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
+                        ?>
+                        <tr>
+                            <td class='success_ID'><?php echo esc_html($prospect->id); ?></td>
+                            <td class='success_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
+                            <td class='success_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+                            <td class='success_email'><?php echo esc_html($prospect->email); ?></td>
+                            <td class='success_phone'><?php echo esc_html($prospect->phone); ?></td>
+                            <td class='success_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+                            <td class='success_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+                            <td class='success_last_updated'><?php echo esc_html($last_updated); ?></td>
+                            <td class='success_account_manager'><?php echo esc_html($account_manager_name); ?></td>
+                            <td class='success_move_to_live'><button class='button_success_to_live'>Move to live</button></td>
+                        </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <h2>Lost Prospects</h2>
         <div class="accordion">
             <button class="accordion-btn">Lost Prospects</button>
@@ -176,7 +165,6 @@ function render_prospects_shortcode() {
                         <?php foreach ($prospects_lost as $prospect) {
                             $account_manager = get_userdata($prospect->account_manager);
                             $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'Unassigned';
-
                             $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
                             $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
                         ?>
@@ -200,24 +188,13 @@ function render_prospects_shortcode() {
         </div>
     </div>
     <script>
-    document.getElementById('add_prospect_btn').addEventListener('click', function() {
-        document.getElementById('add_prospect_form').style.display = 'block';
-    });
-    document.getElementById('add_prospect').addEventListener('submit', function(event) {
-        event.preventDefault();
-        // Handle form submission to add a new prospect
-        // Use AJAX to send data to a PHP handler that will insert the data into the database
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        // Toggle the add prospect form
-        document.getElementById('add_prospect_btn').addEventListener('click', function() {
-            document.getElementById('add_prospect_form').style.display = 'block';
+    jQuery(document).ready(function($) {
+        $('#add_prospect_btn').on('click', function() {
+            $('#add_prospect_form').show();
         });
 
-        // Handle form submission to add a new prospect
-        document.getElementById('add_prospect').addEventListener('submit', function(event) {
+        $('#add_prospect').on('submit', function(event) {
             event.preventDefault();
-
             let formData = new FormData(this);
             formData.append('action', 'add_prospect');
             formData.append('nonce', '<?php echo wp_create_nonce('add_prospect_nonce'); ?>');
@@ -228,58 +205,39 @@ function render_prospects_shortcode() {
             })
                 .then(response => response.text())
                 .then(data => {
-                    alert(data);
-                    location.reload(); // Reload the page to see the new prospect
+                    // Add the new prospect to the table without reloading
+                    $('#live_prospects').DataTable().row.add([
+                        'NEW_ID', // Replace with actual ID
+                        formData.get('name'),
+                        formData.get('instagram'),
+                        formData.get('email'),
+                        formData.get('phone'),
+                        formData.get('client_type'),
+                        formData.get('prospect_type'),
+                        'Not engaged',
+                        'Cold',
+                        'Just now',
+                        'Unassigned',
+                        '<button class="prospect_success">Success</button>',
+                        '<button class="prospect_lost">Lost</button>'
+                    ]).draw(false);
+                    $('#add_prospect_form').hide();
                 })
                 .catch(error => console.error('Error:', error));
         });
 
-        // Accordion functionality
-        document.querySelectorAll('.accordion-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                const accordionContent = button.nextElementSibling;
-                button.classList.toggle('accordion-btn-active');
-                if (button.classList.contains('accordion-btn-active')) {
-                    accordionContent.style.maxHeight = accordionContent.scrollHeight + 'px';
-                } else {
-                    accordionContent.style.maxHeight = 0;
-                }
-            });
-        });
-
         // Handle success and lost buttons
-        document.querySelectorAll('.prospect_success').forEach(button => {
-            button.addEventListener('click', function() {
-                let row = this.closest('tr');
-                moveProspect(row, 'success');
-            });
-        });
-
-        document.querySelectorAll('.prospect_lost').forEach(button => {
-            button.addEventListener('click', function() {
-                let row = this.closest('tr');
-                moveProspect(row, 'lost');
-            });
-        });
-
-        document.querySelectorAll('.button_success_to_live').forEach(button => {
-            button.addEventListener('click', function() {
-                let row = this.closest('tr');
-                moveProspect(row, 'live');
-            });
-        });
-
-        document.querySelectorAll('.button_lost_to_live').forEach(button => {
-            button.addEventListener('click', function() {
-                let row = this.closest('tr');
-                moveProspect(row, 'live');
-            });
+        $(document).on('click', '.prospect_success, .prospect_lost, .button_success_to_live, .button_lost_to_live', function() {
+            let row = $(this).closest('tr');
+            let status = $(this).hasClass('prospect_success') ? 'success' :
+                         $(this).hasClass('prospect_lost') ? 'lost' : 'live';
+            moveProspect(row, status);
         });
 
         function moveProspect(row, status) {
             let formData = new FormData();
             formData.append('action', 'move_prospect');
-            formData.append('id', row.querySelector('.live_ID') ? row.querySelector('.live_ID').textContent : row.querySelector('.success_ID').textContent);
+            formData.append('id', row.find('.live_ID, .success_ID, .lost_ID').text());
             formData.append('status', status);
             formData.append('nonce', '<?php echo wp_create_nonce('move_prospect_nonce'); ?>');
 
@@ -287,22 +245,37 @@ function render_prospects_shortcode() {
                 method: 'POST',
                 body: formData
             })
-                .then(response => response.text())
-                .then(data => {
-                    alert(data);
-                    location.reload(); // Reload the page to reflect the changes
-                })
-                .catch(error => console.error('Error:', error));
+            .then(response => response.text())
+            .then(data => {
+                // Move the prospect to the appropriate table without reloading
+                if (status === 'success') {
+                    $('#live_prospects').DataTable().row(row).remove().draw();
+                    $('#successful_prospects').DataTable().row.add(row).draw();
+                } else if (status === 'lost') {
+                    $('#live_prospects').DataTable().row(row).remove().draw();
+                    $('#lost_prospects').DataTable().row.add(row).draw();
+                } else {
+                    let table = row.closest('table').attr('id');
+                    $('#'+table).DataTable().row(row).remove().draw();
+                    $('#live_prospects').DataTable().row.add(row).draw();
+                }
+            })
+            .catch(error => console.error('Error:', error));
         }
 
+        // Accordion functionality
+        $(document).on('click', '.accordion-btn', function() {
+            $(this).toggleClass('accordion-btn-active');
+            let accordionContent = $(this).next('.accordion-content');
+            if ($(this).hasClass('accordion-btn-active')) {
+                accordionContent.css('max-height', accordionContent.prop('scrollHeight') + 'px');
+            } else {
+                accordionContent.css('max-height', '0');
+            }
+        });
+
         // Initialize DataTables with 100 results per page
-        $('#live_prospects').DataTable({
-            "pageLength": 100
-        });
-        $('#successful_prospects').DataTable({
-            "pageLength": 100
-        });
-        $('#lost_prospects').DataTable({
+        $('#live_prospects, #successful_prospects, #lost_prospects').DataTable({
             "pageLength": 100
         });
     });
@@ -347,20 +320,13 @@ function add_prospect() {
 add_action('wp_ajax_add_prospect', 'add_prospect');
 
 function move_prospect() {
-    // Verify nonce for security
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'move_prospect_nonce')) {
         die('Invalid nonce');
     }
 
-    // Validate and sanitize input
     $id = intval($_POST['id']);
     $status = sanitize_text_field($_POST['status']);
 
-    // Debugging logs
-    // error_log('Move Prospect ID: ' . $id);
-    // error_log('Move Prospect Status: ' . $status);
-
-    // Update the prospect's status in the database
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospects';
     $result = $wpdb->update(
@@ -370,7 +336,6 @@ function move_prospect() {
     );
 
     if ($result === false) {
-        // error_log('Failed to update prospect status for ID: ' . $id);
         echo 'Error moving prospect';
     } else {
         echo 'Prospect moved successfully';
