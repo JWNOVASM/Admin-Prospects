@@ -25,22 +25,22 @@ function render_prospects_shortcode() {
         <h2>Live Prospects</h2>
         <table id="live_prospects" class="display">
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Instagram</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Client Type</th>
-                    <th>Prospect Type</th>
-                    <th>Status</th>
-                    <th>Temperature</th>
-                    <th>Last Updated</th>
-                    <th>Account Manager</th>
-                    <th>Success</th>
-                    <th>Delete</th>
-                </tr>
-            </thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Instagram</th>
+					<th>Email</th>
+					<th>Phone</th>
+					<th>Client Type</th>
+					<th>Prospect Type</th>
+					<th>Status</th>
+					<th>Temperature</th>
+					<th>Last Updated</th>
+					<th>Account Manager</th>
+					<th>Success</th>
+					<th>Delete</th>
+				</tr>
+			</thead>
             <tbody>
                 <?php foreach ($prospects_live as $prospect) {
                     $account_manager = get_userdata($prospect->account_manager_id);
@@ -147,23 +147,23 @@ function render_prospects_shortcode() {
             <div class="accordion-content">
                 <table id="lost_prospects" class="display">
                     <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Instagram</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Client Type</th>
-                            <th>Prospect Type</th>
-                            <th>Last Updated</th>
-                            <th>Reason for Loss</th>
-                            <th>Account Manager</th>
-                            <th>Reactivate</th>
-                        </tr>
-                    </thead>
+						<tr>
+							<th>ID</th>
+							<th>Name</th>
+							<th>Instagram</th>
+							<th>Email</th>
+							<th>Phone</th>
+							<th>Client Type</th>
+							<th>Prospect Type</th>
+							<th>Last Updated</th>
+							<th>Reason for Loss</th>
+							<th>Account Manager</th>
+							<th>Reactivate</th>
+						</tr>
+					</thead>
                     <tbody>
                         <?php foreach ($prospects_lost as $prospect) {
-                            $account_manager = get_userdata($prospect->account_manager);
+                            $account_manager = get_userdata($prospect->account_manager_id);
                             $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'Unassigned';
                             $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
                             $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
@@ -174,12 +174,10 @@ function render_prospects_shortcode() {
                             <td class='lost_instagram'><?php echo esc_html($prospect->instagram); ?></td>
                             <td class='lost_email'><?php echo esc_html($prospect->email); ?></td>
                             <td class='lost_phone'><?php echo esc_html($prospect->phone); ?></td>
-                            <td class='lost_client_type'><?php echo esc_html($prospect->client_type); ?></td>
-                            <td class='lost_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
                             <td class='lost_last_updated'><?php echo esc_html($last_updated); ?></td>
                             <td class='lost_reason'><?php echo esc_html($prospect->reason_for_loss); ?></td>
                             <td class='lost_account_manager'><?php echo esc_html($account_manager_name); ?></td>
-                            <td class='lost_to_live'><button class='button_lost_to_live'>Move to live</button></td>
+                            <td class='lost_move_to_live'><button class='button_lost_to_live'>Move to live</button></td>
                         </tr>
                         <?php } ?>
                     </tbody>
@@ -227,41 +225,60 @@ function render_prospects_shortcode() {
         });
 
         // Handle success and lost buttons
-        $(document).on('click', '.prospect_success, .prospect_lost, .button_success_to_live, .button_lost_to_live', function() {
-            let row = $(this).closest('tr');
-            let status = $(this).hasClass('prospect_success') ? 'success' :
-                         $(this).hasClass('prospect_lost') ? 'lost' : 'live';
-            moveProspect(row, status);
-        });
+		$(document).on('click', '.prospect_success, .prospect_lost, .button_success_to_live, .button_lost_to_live', function() {
+			let row = $(this).closest('tr');
+			let status = $(this).hasClass('prospect_success') ? 'success' :
+			$(this).hasClass('prospect_lost') ? 'lost' : 'live';
+			moveProspect(row, status);
+		});
 
         function moveProspect(row, status) {
-            let formData = new FormData();
-            formData.append('action', 'move_prospect');
-            formData.append('id', row.find('.live_ID, .success_ID, .lost_ID').text());
-            formData.append('status', status);
-            formData.append('nonce', '<?php echo wp_create_nonce('move_prospect_nonce'); ?>');
+			let formData = new FormData();
+			formData.append('action', 'move_prospect');
+			formData.append('id', row.find('.live_ID, .success_ID, .lost_ID').text());
+			formData.append('status', status);
+			formData.append('nonce', '<?php echo wp_create_nonce('move_prospect_nonce'); ?>');
 
-            fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(data => {
-                // Move the prospect to the appropriate table without reloading
-                if (status === 'success') {
-                    $('#live_prospects').DataTable().row(row).remove().draw();
-                    $('#successful_prospects').DataTable().row.add(row).draw();
-                } else if (status === 'lost') {
-                    $('#live_prospects').DataTable().row(row).remove().draw();
-                    $('#lost_prospects').DataTable().row.add(row).draw();
-                } else {
-                    let table = row.closest('table').attr('id');
-                    $('#'+table).DataTable().row(row).remove().draw();
-                    $('#live_prospects').DataTable().row.add(row).draw();
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
+			console.log(`Moving prospect with ID: ${formData.get('id')} to status: ${status}`);
+			console.log(`Current columns: ${row.children('td').length}`);
+
+			fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+				method: 'POST',
+				body: formData
+			})
+			.then(response => response.text())
+			.then(data => {
+				console.log('Server response:', data);
+				let newRow = row.clone();
+				console.log('Columns before removal:', newRow.children('td').length);
+
+				if (status === 'success') {
+					newRow.find('.live_client_type, .live_prospect_type, .live_status, .live_temperature, .live_success, .live_lost').remove();
+					newRow.find('.live_last_updated').attr('class', 'success_last_updated');
+					newRow.find('.live_account_manager').attr('class', 'success_account_manager');
+					newRow.append('<td class="success_move_to_live"><button class="button_success_to_live">Move to live</button></td>');
+					console.log('Columns after removal and addition (success):', newRow.children('td').length);
+					$('#live_prospects').DataTable().row(row).remove().draw();
+					$('#successful_prospects').DataTable().row.add(newRow).draw();
+				} else if (status === 'lost') {
+					newRow.find('.live_client_type, .live_prospect_type, .live_status, .live_temperature, .live_success, .live_lost').remove();
+					newRow.find('.live_last_updated').attr('class', 'lost_last_updated');
+					newRow.find('.live_account_manager').attr('class', 'lost_reason');
+					newRow.append('<td class="lost_move_to_live"><button class="button_lost_to_live">Move to live</button></td>');
+					console.log('Columns after removal and addition (lost):', newRow.children('td').length);
+					$('#live_prospects').DataTable().row(row).remove().draw();
+					$('#lost_prospects').DataTable().row.add(newRow).draw();
+				} else {
+					newRow.find('.success_move_to_live, .lost_reason, .lost_move_to_live').remove();
+					newRow.append('<td class="live_client_type">Unassigned</td><td class="live_prospect_type">Unassigned</td><td class="live_success"><button class="prospect_success">Success</button></td><td class="live_lost"><button class="prospect_lost">Lost</button></td>');
+					let table = row.closest('table').attr('id');
+					console.log('Columns after removal and addition (live):', newRow.children('td').length);
+					$('#'+table).DataTable().row(row).remove().draw();
+					$('#live_prospects').DataTable().row.add(newRow).draw();
+				}
+			})
+			.catch(error => console.error('Error:', error));
+		}
 
         // Accordion functionality
         $(document).on('click', '.accordion-btn', function() {
