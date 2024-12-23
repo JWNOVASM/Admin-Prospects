@@ -43,28 +43,37 @@ function render_prospects_shortcode() {
             </thead>
             <tbody>
                 <?php foreach ($prospects_live as $prospect) {
-                    $account_manager = get_userdata($prospect->account_manager);
-                    $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+					// Fetch the account manager using the account manager ID instead of the prospect ID
+					$account_manager = get_userdata($prospect->account_manager_id); // Assume the correct field name is 'account_manager_id'
 
-                    $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
-                    $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
-                ?>
-                <tr>
-                    <td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
-                    <td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
-                    <td class='live_instagram'><?php echo esc_html($prospect->instagram); ?></td>
-                    <td class='live_email'><?php echo esc_html($prospect->email); ?></td>
-                    <td class='live_phone'><?php echo esc_html($prospect->phone); ?></td>
-                    <td class='live_client_type'><?php echo esc_html($prospect->client_type); ?></td>
-                    <td class='live_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
-                    <td class='live_status'><?php echo esc_html($prospect->status); ?></td>
-                    <td class='live_temperature'><?php echo esc_html($prospect->temperature); ?></td>
-                    <td class='live_last_updated'><?php echo esc_html($last_updated); ?></td>
-                    <td class='live_account_manager'><?php echo esc_html($account_manager_name); ?></td>
-                    <td class='live_success'><button class='prospect_success'>Success</button></td>
-                    <td class='live_lost'><button class='prospect_lost'>Lost</button></td>
-                </tr>
-                <?php } ?>
+					// Debugging statement to log the account manager data
+					error_log("Prospect ID: " . $prospect->id);
+					error_log("Account Manager Data: " . print_r($account_manager, true));
+
+					$account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+
+					// Debugging statement to log the account manager name
+					error_log("Account Manager Name: " . $account_manager_name);
+
+					$last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
+					$last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
+				?>
+				<tr>
+					<td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
+					<td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
+					<td class='live_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+					<td class='live_email'><?php echo esc_html($prospect->email); ?></td>
+					<td class='live_phone'><?php echo esc_html($prospect->phone); ?></td>
+					<td class='live_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+					<td class='live_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+					<td class='live_status'><?php echo esc_html($prospect->status); ?></td>
+					<td class='live_temperature'><?php echo esc_html($prospect->temperature); ?></td>
+					<td class='live_last_updated'><?php echo esc_html($last_updated); ?></td>
+					<td class='live_account_manager'><?php echo esc_html($account_manager_name); ?></td>
+					<td class='live_success'><button class='prospect_success'>Success</button></td>
+					<td class='live_lost'><button class='prospect_lost'>Lost</button></td>
+				</tr>
+				<?php } ?>
             </tbody>
         </table>
         <button id="add_prospect_btn">Add Prospect</button>
@@ -110,26 +119,36 @@ function render_prospects_shortcode() {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($prospects_success as $prospect) {
-                            $account_manager = get_userdata($prospect->account_manager);
-                            $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+                        <?php foreach ($prospects_live as $prospect) {
+							$account_manager = get_userdata($prospect->account_manager);
 
-                            $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
-                            $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
-                        ?>
-                        <tr>
-                            <td class='success_ID'><?php echo esc_html($prospect->id); ?></td>
-                            <td class='success_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
-                            <td class='success_instagram'><?php echo esc_html($prospect->instagram); ?></td>
-                            <td class='success_email'><?php echo esc_html($prospect->email); ?></td>
-                            <td class='success_phone'><?php echo esc_html($prospect->phone); ?></td>
-                            <td class='success_client_type'><?php echo esc_html($prospect->client_type); ?></td>
-                            <td class='success_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
-                            <td class='success_last_updated'><?php echo esc_html($last_updated); ?></td>
-                            <td class='success_account_manager'><?php echo esc_html($account_manager_name); ?></td>
-                            <td class='success_to_live'><button class='button_success_to_live'>Move to live</button></td>
-                        </tr>
-                        <?php } ?>
+							// Debugging statement to log the account manager object
+							error_log(print_r($account_manager, true));
+
+							$account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
+
+							// Debugging statement to log the account manager name
+							error_log("Account Manager Name: " . $account_manager_name);
+
+							$last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect->id));
+							$last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
+						?>
+						<tr>
+							<td class='live_ID'><?php echo esc_html($prospect->id); ?></td>
+							<td class='live_name'><a href="<?php echo site_url('/admin/prospects/profile/?prospect_id=' . $prospect->id); ?>"><?php echo esc_html($prospect->name); ?></a></td>
+							<td class='live_instagram'><?php echo esc_html($prospect->instagram); ?></td>
+							<td class='live_email'><?php echo esc_html($prospect->email); ?></td>
+							<td class='live_phone'><?php echo esc_html($prospect->phone); ?></td>
+							<td class='live_client_type'><?php echo esc_html($prospect->client_type); ?></td>
+							<td class='live_prospect_type'><?php echo esc_html($prospect->prospect_type); ?></td>
+							<td class='live_status'><?php echo esc_html($prospect->status); ?></td>
+							<td class='live_temperature'><?php echo esc_html($prospect->temperature); ?></td>
+							<td class='live_last_updated'><?php echo esc_html($last_updated); ?></td>
+							<td class='live_account_manager'><?php echo esc_html($account_manager_name); ?></td>
+							<td class='live_success'><button class='prospect_success'>Success</button></td>
+							<td class='live_lost'><button class='prospect_lost'>Lost</button></td>
+						</tr>
+						<?php } ?>
                     </tbody>
                 </table>
             </div>
