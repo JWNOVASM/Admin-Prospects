@@ -26,6 +26,9 @@ function prospect_profile_page() {
     $account_manager = get_userdata($account_manager_id);
     $account_manager_name = $account_manager ? $account_manager->first_name . ' ' . $account_manager->last_name : 'N/A';
 
+    $last_note = $wpdb->get_row($wpdb->prepare("SELECT timestamp FROM {$wpdb->prefix}prospect_notes WHERE prospect_id = %d ORDER BY timestamp DESC LIMIT 1", $prospect_id));
+    $last_updated = $last_note ? $last_note->timestamp : $prospect->last_updated;
+
     ob_start();
     ?>
     <div class="prospect-profile">
@@ -62,7 +65,7 @@ function prospect_profile_page() {
                 <option value="Hot" <?php selected($prospect->temperature, 'Hot'); ?>>Hot</option>
             </select>
         </p>
-        <p><strong>Last Updated:</strong> <?php echo esc_html($prospect->last_updated); ?></p>
+        <p><strong>Last Updated:</strong> <?php echo esc_html($last_updated); ?></p>
         <p><strong>Account Manager:</strong> 
             <?php if (current_user_can('administrator')): ?>
                 <select id="prospect_account_manager" data-old-value="<?php echo esc_html($prospect->account_manager); ?>">
@@ -132,7 +135,7 @@ function prospect_profile_page() {
                 }
             });
 
-			// Delete notes (only for administrators)
+            // Delete notes (only for administrators)
             $('.prospect-notes').on('click', '.delete-note', function() {
                 if (confirm('Are you sure you want to delete this note?')) {
                     var noteId = $(this).data('note-id');
@@ -143,12 +146,11 @@ function prospect_profile_page() {
                         note_id: noteId,
                         nonce: nonce
                     }, function(response) {
-                        // alert(response);
                         location.reload();
                     });
                 }
             });
-			
+
             // Scroll to the bottom of the notes container by default
             var notesContainer = $('.prospect-notes');
             if (notesContainer[0].scrollHeight > notesContainer.height()) {
