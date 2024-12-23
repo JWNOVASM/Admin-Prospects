@@ -17,7 +17,7 @@ function prospect_profile_page() {
     }
 
     $current_user = wp_get_current_user();
-    $account_manager_id = get_user_meta($prospect->ID, 'assigned_account_manager', true);
+    $account_manager_id = get_user_meta($prospect->id, 'assigned_account_manager', true); // Corrected property name
 
     if (in_array('account_manager', $current_user->roles) && $current_user->ID != $account_manager_id) {
         return 'You do not have permission to view this prospect.';
@@ -46,6 +46,7 @@ function prospect_profile_page() {
         <form id="add_note_form">
             <textarea name="note" placeholder="Add a note" required></textarea>
             <input type="hidden" name="prospect_id" value="<?php echo esc_attr($prospect_id); ?>">
+            <input type="hidden" name="nonce" value="<?php echo wp_create_nonce('add_note_nonce'); ?>"> <!-- Added nonce field -->
             <button type="submit">Add Note</button>
         </form>
     </div>
