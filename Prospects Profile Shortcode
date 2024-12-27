@@ -218,7 +218,7 @@ function display_prospect_notes($atts) {
     if (!empty($notes)) {
         echo '<ul class="prospect-notes">';
         foreach ($notes as $note) {
-            $note_class = (strpos($note->note, 'changed') !== false) ? 'system-generated' : '';
+            $note_class = (strpos($note->note, 'moved') !== false) ? 'system-generated' : '';
             echo '<li class="' . $note_class . '">';
             echo '<strong>' . esc_html($note->user) . ':</strong> ';
             echo esc_html($note->note);
