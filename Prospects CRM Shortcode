@@ -178,6 +178,18 @@ function render_prospects_shortcode() {
                 </table>
             </div>
         </div>
+		<div id="lost_popup" style="display: none;">
+		  <select id="loss_reason">
+			<option value="Unassigned">Unassigned</option>
+			<option value="No contact">No contact</option>
+			<option value="Never got back to us">Never got back to us</option>
+			<option value="Linked with another lash company">Linked with another lash company</option>
+			<option value="Already a brand partner">Already a brand partner</option>
+			<option value="Something else">Something else</option>
+		  </select>
+		  <input type="text" id="custom_loss_reason" placeholder="Enter custom reason" disabled>
+		  <button id="confirm_loss">Confirm</button>
+		</div>
     </div>
     <script>
     jQuery(document).ready(function($) {
@@ -309,6 +321,84 @@ function render_prospects_shortcode() {
 			})
 			.catch(error => console.error('Error:', error));
 		}
+		
+		$(document).on('click', '.prospect_lost', function() {
+        $('#lost_popup').show();
+        let row = $(this).closest('tr');
+        $('#confirm_loss').data('row', row);
+    });
+
+    // Handle change event for loss_reason
+    $('#loss_reason').on('change', function() {
+        if ($(this).val() === 'Something else') {
+            $('#custom_loss_reason').prop('disabled', false);
+        } else {
+            $('#custom_loss_reason').prop('disabled', true).val('');
+        }
+    });
+
+    // Handle confirm_loss button click
+    $('#confirm_loss').on('click', function() {
+        let row = $(this).data('row');
+        let lossReason = $('#loss_reason').val();
+        let customLossReason = $('#custom_loss_reason').val();
+        let reasonForLoss = (lossReason === 'Something else') ? customLossReason : lossReason;
+
+        // Move the prospect with the selected reason
+        moveProspect(row, 'lost', reasonForLoss);
+
+        // Hide the popup
+        $('#lost_popup').hide();
+    });
+
+    function moveProspect(row, status, reasonForLoss) {
+        let formData = new FormData();
+        let previousStatus = row.closest('table').attr('id').replace('_prospects', '');
+        formData.append('action', 'move_prospect');
+        formData.append('id', row.find('.live_ID, .success_ID, .lost_ID').text());
+        formData.append('status', status);
+        formData.append('previous_status', previousStatus);
+        formData.append('reason_for_loss', reasonForLoss);
+        formData.append('nonce', '<?php echo wp_create_nonce('move_prospect_nonce'); ?>');
+
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            let newRow = row.clone();
+            let accountManager = newRow.find('.live_account_manager, .success_account_manager, .lost_account_manager').text();
+
+            if (status === 'lost') {
+                newRow.html(`
+                    <td class='lost_ID'>${newRow.find('.live_ID').text()}</td>
+                    <td class='lost_name'>${newRow.find('.live_name').html()}</td>
+                    <td class='lost_instagram'>${newRow.find('.live_instagram').text()}</td>
+                    <td class='lost_email'>${newRow.find('.live_email').text()}</td>
+                    <td class='lost_phone'>${newRow.find('.live_phone').text()}</td>
+                    <td class='lost_last_updated'>${newRow.find('.live_last_updated').text()}</td>
+                    <td class='lost_reason'>${reasonForLoss}</td>
+                    <td class='lost_account_manager'>${accountManager}</td>
+                    <td class="lost_move_to_live"><button class="button_lost_to_live">Move to live</button></td>
+                `);
+                $('#live_prospects').DataTable().row(row).remove().draw();
+                $('#lost_prospects').DataTable().row.add(newRow).draw();
+            }
+
+            // Add system-generated note
+            let noteText = `${formData.get('username')} moved prospect from ${previousStatus} to ${status} with reason: ${reasonForLoss}`;
+            $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+                action: 'add_prospect_note',
+                prospect_id: formData.get('id'),
+                note: noteText,
+                nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
+            }, function(noteResponse) {
+                $('.prospect-notes').append('<li class="system-generated"><strong>' + formData.get('username') + ':</strong> ' + noteText + ' <em>(<?php echo current_time('mysql'); ?>)</em> <button class="delete-note">Delete</button></li>');
+            });
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
         // Accordion functionality
         $(document).on('click', '.accordion-btn', function() {
