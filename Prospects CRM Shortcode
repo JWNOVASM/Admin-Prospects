@@ -305,7 +305,7 @@ function render_prospects_shortcode() {
 			moveProspect(row, status);
 		});
 
-		function moveProspect(row, status, reasonForLoss = 'Unassigned') {
+		function moveProspect(row, status, reasonForLoss = '') {
 			let formData = new FormData();
 			let previousStatus = row.closest('table').attr('id').replace('_prospects', '');
 			formData.append('action', 'move_prospect');
@@ -376,7 +376,10 @@ function render_prospects_shortcode() {
 				accordionContent.css('max-height', accordionContent.prop('scrollHeight') + 'px');
 
 				// Add system-generated note
-				let noteText = `${formData.get('username')} moved prospect from ${previousStatus} to ${status} with reason: ${reasonForLoss}`;
+				let noteText = `${formData.get('username')} moved prospect from ${previousStatus} to ${status}`;
+				if (status === 'lost') {
+					noteText += ` with reason: ${reasonForLoss}`;
+				}
 				$.post('<?php echo admin_url('admin-ajax.php'); ?>', {
 					action: 'add_prospect_note',
 					prospect_id: formData.get('id'),
@@ -388,6 +391,27 @@ function render_prospects_shortcode() {
 			})
 			.catch(error => console.error('Error:', error));
 		}
+
+		// Handle select changes and add notes
+		$('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').on('change', function() {
+			let selectElement = $(this);
+			let oldValue = selectElement.data('oldValue');
+			let newValue = selectElement.val();
+			selectElement.data('oldValue', newValue); // Update the old value data attribute
+
+			let prospectId = selectElement.closest('tr').find('.live_ID, .success_ID, .lost_ID').text(); // Get the prospect ID
+
+			let noteText = `<?php echo wp_get_current_user()->first_name; ?> changed ${selectElement.attr('id').replace('prospect_', '').replace('_', ' ')} from ${oldValue} to ${newValue}`;
+
+			$.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+				action: 'add_prospect_note',
+				prospect_id: prospectId, // Correctly pass the prospect ID
+				note: noteText,
+				nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
+			}, function(noteResponse) {
+				$('.prospect-notes').append('<li class="system-generated"><strong><?php echo wp_get_current_user()->first_name; ?>:</strong> ' + noteText + ' <em>(<?php echo current_time('mysql'); ?>)</em> <button class="delete-note">Delete</button></li>');
+			});
+		});
 
 		// Accordion functionality
 		$(document).on('click', '.accordion-btn', function() {
@@ -478,7 +502,10 @@ function move_prospect() {
     if ($result === false) {
         echo 'Error moving prospect';
     } else {
-        $note = "$username moved prospect from $previous_status to $status with reason: $reason_for_loss";
+        $note = "$username moved prospect from $previous_status to $status";
+        if ($status === 'lost') {
+            $note .= " with reason: $reason_for_loss";
+        }
         $wpdb->insert("{$wpdb->prefix}prospect_notes", [
             'prospect_id' => $id,
             'note' => $note,
