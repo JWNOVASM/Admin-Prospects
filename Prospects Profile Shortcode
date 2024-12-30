@@ -189,6 +189,10 @@ function add_prospect_note() {
     $note = sanitize_textarea_field($_POST['note']);
     $user = wp_get_current_user();
 
+    if (empty($note)) {
+        die('Note is empty');
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospect_notes';
     $wpdb->insert($table_name, [
