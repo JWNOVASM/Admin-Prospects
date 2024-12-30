@@ -32,66 +32,77 @@ function prospect_profile_page() {
     ob_start();
     ?>
     <div class="prospect-profile">
-        <h2><?php echo esc_html($prospect->name); ?></h2>
-        <p><strong>Instagram:</strong> <a href="https://www.instagram.com/<?php echo esc_html($prospect->instagram); ?>" target="_blank"><?php echo esc_html($prospect->instagram); ?></a></p>
-        <p><strong>Email:</strong> <a href="mailto:<?php echo esc_html($prospect->email); ?>"><?php echo esc_html($prospect->email); ?></a></p>
-        <p><strong>Phone:</strong> <a href="tel:<?php echo esc_html($prospect->phone); ?>"><?php echo esc_html($prospect->phone); ?></a></p>
-        <p><strong>Client Type:</strong>
-            <select id="prospect_client_type" data-old-value="<?php echo esc_html($prospect->client_type); ?>">
-                <option value="Lash Technician" <?php selected($prospect->client_type, 'Lash Technician'); ?>>Lash Technician</option>
-                <option value="Salon Owner" <?php selected($prospect->client_type, 'Salon Owner'); ?>>Salon Owner</option>
-                <option value="Salon Business" <?php selected($prospect->client_type, 'Salon Business'); ?>>Salon Business</option>
-                <option value="Other" <?php selected($prospect->client_type, 'Other'); ?>>Other</option>
-            </select>
-        </p>
-        <p><strong>Prospect Type:</strong>
-            <select id="prospect_prospect_type" data-old-value="<?php echo esc_html($prospect->prospect_type); ?>">
-                <option value="Customer" <?php selected($prospect->prospect_type, 'Customer'); ?>>Customer</option>
-                <option value="Brand Partner" <?php selected($prospect->prospect_type, 'Brand Partner'); ?>>Brand Partner</option>
-                <option value="Salon Partner" <?php selected($prospect->prospect_type, 'Salon Partner'); ?>>Salon Partner</option>
-                <option value="Other" <?php selected($prospect->prospect_type, 'Other'); ?>>Other</option>
-            </select>
-        </p>
-        <p><strong>Status:</strong> 
-            <select id="prospect_status" data-old-value="<?php echo esc_html($prospect->status); ?>">
-                <option value="Not engaged" <?php selected($prospect->status, 'Not engaged'); ?>>Not engaged</option>
-                <option value="Engaged" <?php selected($prospect->status, 'Engaged'); ?>>Engaged</option>
-            </select>
-        </p>
-        <p><strong>Temperature:</strong> 
-            <select id="prospect_temperature" data-old-value="<?php echo esc_html($prospect->temperature); ?>">
-                <option value="Cold" <?php selected($prospect->temperature, 'Cold'); ?>>Cold</option>
-                <option value="Warm" <?php selected($prospect->temperature, 'Warm'); ?>>Warm</option>
-                <option value="Hot" <?php selected($prospect->temperature, 'Hot'); ?>>Hot</option>
-            </select>
-        </p>
-        <p><strong>Last Updated:</strong> <?php echo esc_html($last_updated); ?></p>
-        <p><strong>Account Manager:</strong> 
-            <?php if (current_user_can('administrator')): ?>
-                <select id="prospect_account_manager" data-old-value="<?php echo esc_html($prospect->account_manager_id); ?>">
-                    <option value="0" <?php selected($prospect->account_manager_id, 0); ?>>Unassigned</option>
-                    <?php
-                    $users = get_users(array('role' => 'account_manager'));
-                    foreach ($users as $user) {
-                        echo '<option value="' . esc_html($user->ID) . '" ' . selected($prospect->account_manager_id, $user->ID, false) . '>' . esc_html($user->first_name . ' ' . $user->last_name) . '</option>';
-                    }
-                    ?>
-                </select>
-            <?php else: ?>
-                <?php echo esc_html($account_manager_name); ?>
-            <?php endif; ?>
-        </p>
-        <h3>Notes</h3>
-        <div class="prospect-notes" style="max-height: 100px; overflow-y: scroll;">
-            <?php echo do_shortcode('[prospect_notes prospect_id="' . $prospect_id . '"]'); ?>
-        </div>
-        <form id="add_note_form">
-            <textarea name="note" placeholder="Add a note" required></textarea>
-            <input type="hidden" name="prospect_id" value="<?php echo esc_attr($prospect_id); ?>">
-            <input type="hidden" name="nonce" value="<?php echo wp_create_nonce('add_note_nonce'); ?>">
-            <button type="submit">Add Note</button>
-        </form>
-        <button id="return_to_prospects" onclick="window.location.href='https://kliko.co.uk/admin/prospects';">Return to prospects</button>
+		<div id="return-to-admin-cont">
+			<a id="return-to-admin" href="/prospects">
+				<div class="icon"></div>
+				<div>Back to prospects</div>
+			</a>
+		</div>
+		<div id="prospect-cont">
+			<div id="details-cont">
+				<h2><?php echo esc_html($prospect->name); ?></h2>
+				<div class="detail"><div class="detail-label">Instagram:</div> <a href="https://www.instagram.com/<?php echo esc_html($prospect->instagram); ?>" target="_blank"><?php echo esc_html($prospect->instagram); ?></a></div>
+				<div class="detail"><div class="detail-label">Email:</div> <a href="mailto:<?php echo esc_html($prospect->email); ?>"><?php echo esc_html($prospect->email); ?></a></div>
+				<div id="details-phone" class="detail"><div class="detail-label">Phone:</div> <a href="tel:<?php echo esc_html($prospect->phone); ?>"><?php echo esc_html($prospect->phone); ?></a></div>
+				<div class="detail"><div class="detail-label">Client Type:</div>
+					<select id="prospect_client_type" data-old-value="<?php echo esc_html($prospect->client_type); ?>">
+						<option value="Lash Technician" <?php selected($prospect->client_type, 'Lash Technician'); ?>>Lash Technician</option>
+						<option value="Salon Owner" <?php selected($prospect->client_type, 'Salon Owner'); ?>>Salon Owner</option>
+						<option value="Salon Business" <?php selected($prospect->client_type, 'Salon Business'); ?>>Salon Business</option>
+						<option value="Other" <?php selected($prospect->client_type, 'Other'); ?>>Other</option>
+					</select>
+				</div>
+				<div class="detail"><div class="detail-label">Prospect Type:</div>
+					<select id="prospect_prospect_type" data-old-value="<?php echo esc_html($prospect->prospect_type); ?>">
+						<option value="Customer" <?php selected($prospect->prospect_type, 'Customer'); ?>>Customer</option>
+						<option value="Brand Partner" <?php selected($prospect->prospect_type, 'Brand Partner'); ?>>Brand Partner</option>
+						<option value="Salon Partner" <?php selected($prospect->prospect_type, 'Salon Partner'); ?>>Salon Partner</option>
+						<option value="Other" <?php selected($prospect->prospect_type, 'Other'); ?>>Other</option>
+					</select>
+				</div>
+				<div class="detail"><div class="detail-label">Status:</div> 
+					<select id="prospect_status" data-old-value="<?php echo esc_html($prospect->status); ?>">
+						<option value="Not engaged" <?php selected($prospect->status, 'Not engaged'); ?>>Not engaged</option>
+						<option value="Engaged" <?php selected($prospect->status, 'Engaged'); ?>>Engaged</option>
+					</select>
+				</div>
+				<div class="detail"><div class="detail-label">Temperature:</div> 
+					<select id="prospect_temperature" data-old-value="<?php echo esc_html($prospect->temperature); ?>">
+						<option value="Cold" <?php selected($prospect->temperature, 'Cold'); ?>>Cold</option>
+						<option value="Warm" <?php selected($prospect->temperature, 'Warm'); ?>>Warm</option>
+						<option value="Hot" <?php selected($prospect->temperature, 'Hot'); ?>>Hot</option>
+					</select>
+				</div>
+				<div class="detail"><div class="detail-label">Last Updated:</div><div id="details-last-updated"><?php echo esc_html($last_updated); ?></div></div>
+				<div class="detail"><div class="detail-label">Account Manager:</div> 
+					<?php if (current_user_can('administrator')): ?>
+						<select id="prospect_account_manager" data-old-value="<?php echo esc_html($prospect->account_manager_id); ?>">
+							<option value="0" <?php selected($prospect->account_manager_id, 0); ?>>Unassigned</option>
+							<?php
+							$users = get_users(array('role' => 'account_manager'));
+							foreach ($users as $user) {
+								echo '<option value="' . esc_html($user->ID) . '" ' . selected($prospect->account_manager_id, $user->ID, false) . '>' . esc_html($user->first_name . ' ' . $user->last_name) . '</option>';
+							}
+							?>
+						</select>
+					<?php else: ?>
+					<div id="details-account-manager"><?php echo esc_html($account_manager_name); ?></div>
+					<?php endif; ?>
+				</div>
+			</div>
+			<div id="notes-cont">
+				<h3>Notes</h3>
+				<div class="prospect-notes">
+					<?php echo do_shortcode('[prospect_notes prospect_id="' . $prospect_id . '"]'); ?>
+				</div>
+				<form id="add_note_form">
+					<textarea name="note" placeholder="Add a note" required></textarea>
+					<input type="hidden" name="prospect_id" value="<?php echo esc_attr($prospect_id); ?>">
+					<input type="hidden" name="nonce" value="<?php echo wp_create_nonce('add_note_nonce'); ?>">
+					<button type="submit"></button>
+				</form>
+			</div>
+		</div>
     </div>
     <script>
         jQuery(document).ready(function($) {
@@ -100,7 +111,7 @@ function prospect_profile_page() {
                 var formData = $(this).serialize();
                 $.post('<?php echo admin_url('admin-ajax.php'); ?>', formData + '&action=add_prospect_note', function(response) {
                     // Update the DOM to reflect the new note without reloading
-                    $('.prospect-notes').append('<li><strong><?php echo $current_user->display_name; ?>:</strong> ' + formData.get('note') + ' <em>(<?php echo current_time('mysql'); ?>)</em> <button class="delete-note" data-note-id="' + response.note_id + '">Delete</button></li>');
+                    $('.prospect-chat').append('<div><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + formData.get('note') + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div> <!--<button class="delete-note" data-note-id="' + response.note_id + '"></button>--></div><div class="chat-seperator"></div>');
                 });
             });
 
@@ -133,7 +144,7 @@ function prospect_profile_page() {
                                 nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
                             }, function(noteResponse) {
                                 // Update the DOM to reflect the new note without reloading
-                                $('.prospect-notes').append('<li><strong><?php echo $current_user->display_name; ?>:</strong> ' + noteText + ' <em>(<?php echo current_time('mysql'); ?>)</em> <button class="delete-note" data-note-id="' + noteResponse.note_id + '">Delete</button></li>');
+                                $('.prospect-chat').append('<div><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + noteText + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div> <!--<button class="delete-note" data-note-id="' + noteResponse.note_id + '"></button>--></div><div class="chat-seperator"></div>');
                             });
                         }
                     });
@@ -216,19 +227,19 @@ function display_prospect_notes($atts) {
 
     ob_start();
     if (!empty($notes)) {
-        echo '<ul class="prospect-notes">';
+        echo '<div class="prospect-chat">';
         foreach ($notes as $note) {
             $note_class = (strpos($note->note, 'moved') !== false) ? 'system-generated' : '';
-            echo '<li class="' . $note_class . '">';
-            echo '<strong>' . esc_html($note->user) . ':</strong> ';
+            echo '<div class="' . $note_class . '">';
+            echo '<div class="chat-name">' . esc_html($note->user) . ':</div> ';
             echo esc_html($note->note);
-            echo ' <em>(' . esc_html($note->timestamp) . ')</em>';
+            echo ' <div class="chat-timestamp">' . esc_html($note->timestamp) . '</div>';
             if (current_user_can('administrator')) {
-                echo ' <button class="delete-note" data-note-id="' . esc_html($note->id) . '">Delete</button>';
+                echo ' <button class="delete-note" data-note-id="' . esc_html($note->id) . '"></button>';
             }
-            echo '</li>';
+            echo '</div><div class="chat-seperator"></div>';
         }
-        echo '</ul>';
+        echo '</div>';
     } else {
         echo '<p>No notes available.</p>';
     }
