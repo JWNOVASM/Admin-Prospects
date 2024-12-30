@@ -5,15 +5,28 @@ function render_prospects_shortcode() {
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospects';
+    $user_id = get_current_user_id();
 
     // Fetching live prospects
-    $prospects_live = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'live'");
+    if (current_user_can('account_manager')) {
+        $prospects_live = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_status = 'live' AND account_manager_id = %d", $user_id));
+    } else {
+        $prospects_live = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'live'");
+    }
 
     // Fetching successful prospects
-    $prospects_success = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'success'");
+    if (current_user_can('account_manager')) {
+        $prospects_success = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_status = 'success' AND account_manager_id = %d", $user_id));
+    } else {
+        $prospects_success = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'success'");
+    }
 
     // Fetching lost prospects
-    $prospects_lost = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'lost'");
+    if (current_user_can('account_manager')) {
+        $prospects_lost = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_status = 'lost' AND account_manager_id = %d", $user_id));
+    } else {
+        $prospects_lost = $wpdb->get_results("SELECT * FROM $table_name WHERE prospect_status = 'lost'");
+    }
 
     // Enqueue DataTables and jQuery scripts/styles
     wp_enqueue_script('datatables-js', 'https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js', ['jquery'], null, true);
@@ -22,7 +35,13 @@ function render_prospects_shortcode() {
     ob_start();
     ?>
     <div id="prospects-section">
-        <h2>Live Prospects</h2>
+		<div id="return-to-admin-cont">
+			<a id="return-to-admin" href="/admin">
+				<div class="icon"></div>
+				<div>Back to admin area</div>
+			</a>
+		</div>
+        <h2>Prospects</h2>
         <table id="live_prospects" class="display">
             <thead>
                 <tr>
@@ -98,7 +117,8 @@ function render_prospects_shortcode() {
                 <button type="submit">Add Prospect</button>
             </form>
         </div>
-        <h2>Successful Prospects</h2>
+        <!-- <h2>Successful Prospects</h2> -->
+		<div class="accordion-spacer"></div>
         <div class="accordion">
             <button class="accordion-btn">Successful Prospects</button>
             <div class="accordion-content">
@@ -137,7 +157,8 @@ function render_prospects_shortcode() {
                 </table>
             </div>
         </div>
-        <h2>Lost Prospects</h2>
+        <!-- <h2>Lost Prospects</h2> -->
+		<div class="accordion-spacer"></div>
         <div class="accordion">
             <button class="accordion-btn">Lost Prospects</button>
             <div class="accordion-content">
@@ -179,16 +200,20 @@ function render_prospects_shortcode() {
             </div>
         </div>
 		<div id="lost_popup" style="display: none;">
-		  <select id="loss_reason">
-			<option value="Unassigned">Unassigned</option>
-			<option value="No contact">No contact</option>
-			<option value="Never got back to us">Never got back to us</option>
-			<option value="Linked with another lash company">Linked with another lash company</option>
-			<option value="Already a brand partner">Already a brand partner</option>
-			<option value="Something else">Something else</option>
-		  </select>
-		  <input type="text" id="custom_loss_reason" placeholder="Enter custom reason" disabled>
-		  <button id="confirm_loss">Confirm</button>
+			<div id="lost_popup_contents">
+				<h3>Please confirm lost reason</h3>
+				<div id="lost_popup_close"></div>
+				<select id="loss_reason">
+					<option value="Unassigned">Unassigned</option>
+					<option value="No contact">No contact</option>
+					<option value="Never got back to us">Never got back to us</option>
+					<option value="Linked with another lash company">Linked with another lash company</option>
+					<option value="Already a brand partner">Already a brand partner</option>
+					<option value="Something else">Something else</option>
+				  </select>
+				  <input type="text" id="custom_loss_reason" placeholder="Enter custom reason" disabled>
+				  <button id="confirm_loss">Confirm</button>
+			</div>
 		</div>
     </div>
     <script>
@@ -261,7 +286,12 @@ function render_prospects_shortcode() {
 			// Hide the popup
 			$('#lost_popup').hide();
 		});
-
+		
+		// Close lost popup if not needed
+		$('#lost_popup_close').on('click', function() {
+			$('#lost_popup').hide();									   			   
+		});
+		
 		// Handle success and 'Move to Live' buttons
 		$(document).on('click', '.prospect_success, .button_success_to_live, .button_lost_to_live', function() {
 			let row = $(this).closest('tr');
@@ -447,7 +477,5 @@ function move_prospect() {
         echo 'Prospect moved successfully';
     }
     wp_die();
-}
-add_action('wp_ajax_move_prospect', 'move_prospect');
 }
 add_action('wp_ajax_move_prospect', 'move_prospect');
