@@ -234,12 +234,18 @@ function render_prospects_shortcode() {
 				method: 'POST',
 				body: formData
 			})
-			.then(response => response.text())
+			.then(response => response.json())
 			.then(data => {
+				// Get the selected account manager's name
+				let accountManagerName = $('#add_prospect select[name="account_manager_id"] option:selected').text();
+				if (accountManagerName === 'Unassigned') {
+					accountManagerName = 'Unassigned';
+				}
+
 				// Add the new prospect to the table without reloading
 				$('#live_prospects').DataTable().row.add([
-					'NEW_ID', // Replace with actual ID
-					formData.get('name'),
+					data.id, // Use the actual ID returned from the server
+					`<a href="<?php echo site_url('/admin/prospects/profile/?prospect_id='); ?>${data.id}">${formData.get('name')}</a>`,
 					formData.get('instagram'),
 					formData.get('email'),
 					formData.get('phone'),
@@ -248,7 +254,7 @@ function render_prospects_shortcode() {
 					'Not engaged',
 					'Cold',
 					'Just now',
-					'Unassigned',
+					accountManagerName,
 					'<button class="prospect_success">Success</button>',
 					'<button class="prospect_lost">Lost</button>'
 				]).draw(false);
@@ -434,7 +440,12 @@ function add_prospect() {
         'prospect_status' => 'live'
     ]);
 
-    echo 'Prospect added successfully';
+    $new_prospect_id = $wpdb->insert_id;
+
+    echo json_encode([
+        'id' => $new_prospect_id,
+        'message' => 'Prospect added successfully'
+    ]);
     wp_die();
 }
 add_action('wp_ajax_add_prospect', 'add_prospect');
