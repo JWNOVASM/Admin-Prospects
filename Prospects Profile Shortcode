@@ -106,16 +106,27 @@ function prospect_profile_page() {
     </div>
     <script>
         jQuery(document).ready(function($) {
-            $('#add_note_form').on('submit', function(event) {
-                event.preventDefault();
-                var formData = $(this).serialize();
-                $.post('<?php echo admin_url('admin-ajax.php'); ?>', formData + '&action=add_prospect_note', function(response) {
-                    // Update the DOM to reflect the new note without reloading
-                    $('.prospect-chat').append('<div><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + formData.get('note') + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div> <!--<button class="delete-note" data-note-id="' + response.note_id + '"></button>--></div><div class="chat-seperator"></div>');
-                });
-            });
+			$('#add_note_form').on('submit', function(event) {
+				event.preventDefault();
 
-            // Set the data-old-value attributes on page load
+				// Create a FormData object from the form
+				var formData = new FormData(this);
+				formData.append('action', 'add_prospect_note');
+
+				$.ajax({
+					url: '<?php echo admin_url('admin-ajax.php'); ?>',
+					type: 'POST',
+					data: formData,
+					processData: false,
+					contentType: false,
+					success: function(response) {
+						// Update the DOM to reflect the new note without reloading
+						$('.prospect-chat').append('<div><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + formData.get('note') + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div> <!--<button class="delete-note" data-note-id="' + response.note_id + '"></button>--></div><div class="chat-seperator"></div>');
+					}
+				});
+			});
+
+			// Set the data-old-value attributes on page load
 			$('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').each(function() {
 				$(this).data('old-value', $(this).val());
 			});
@@ -155,36 +166,36 @@ function prospect_profile_page() {
 								note: noteText,
 								nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
 							}, function(noteResponse) {
-								$('.prospect-chat').append('<div class="system-generated"><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + noteText + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div> <!--<button class="delete-note">Delete</button>--></div>');
+								$('.prospect-chat').append('<div class="system-generated"><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + noteText + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div></div><div class="chat-seperator"></div>');
 							});
 						}
 					});
 				}
 			});
 
-            // Delete notes (only for administrators)
-            $('.prospect-notes').on('click', '.delete-note', function() {
-                if (confirm('Are you sure you want to delete this note?')) {
-                    var noteId = $(this).data('note-id');
-                    var nonce = '<?php echo wp_create_nonce('delete_note_nonce'); ?>';
+			// Delete notes (only for administrators)
+			$('.prospect-notes').on('click', '.delete-note', function() {
+				if (confirm('Are you sure you want to delete this note?')) {
+					var noteId = $(this).data('note-id');
+					var nonce = '<?php echo wp_create_nonce('delete_note_nonce'); ?>';
 
-                    $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-                        action: 'delete_prospect_note',
-                        note_id: noteId,
-                        nonce: nonce
-                    }, function(response) {
-                        // Update the DOM to remove the deleted note without reloading
-                        $(this).parent().remove();
-                    });
-                }
-            });
+					$.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+						action: 'delete_prospect_note',
+						note_id: noteId,
+						nonce: nonce
+					}, function(response) {
+						// Update the DOM to remove the deleted note without reloading
+						$(this).parent().remove();
+					});
+				}
+			});
 
-            // Scroll to the bottom of the notes container by default
-            var notesContainer = $('.prospect-notes');
-            if (notesContainer[0].scrollHeight > notesContainer.height()) {
-                notesContainer.scrollTop(notesContainer[0].scrollHeight);
-            }
-        });
+			// Scroll to the bottom of the notes container by default
+			var notesContainer = $('.prospect-notes');
+			if (notesContainer[0].scrollHeight > notesContainer.height()) {
+				notesContainer.scrollTop(notesContainer[0].scrollHeight);
+			}
+		});
     </script>
     <?php
     return ob_get_clean();
@@ -244,7 +255,9 @@ function display_prospect_notes($atts) {
     if (!empty($notes)) {
         echo '<div class="prospect-chat">';
         foreach ($notes as $note) {
-            $note_class = (strpos($note->note, 'moved') !== false) ? 'system-generated' : '';
+            // Add the 'system-generated' class if the note contains certain keywords
+            $is_system_generated = strpos($note->note, 'changed') !== false || strpos($note->note, 'moved') !== false;
+            $note_class = $is_system_generated ? 'system-generated' : '';
             echo '<div class="' . $note_class . '">';
             echo '<div class="chat-name">' . esc_html($note->user) . ':</div> ';
             echo esc_html($note->note);
