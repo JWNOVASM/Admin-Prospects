@@ -229,7 +229,13 @@ function add_prospect_note() {
         'timestamp' => current_time('mysql')
     ]);
 
-    echo json_encode(['note_id' => $wpdb->insert_id]);
+    // Determine if the note is system-generated
+    $is_system_generated = strpos($note, 'moved') !== false;
+
+    echo json_encode([
+        'note_id' => $wpdb->insert_id,
+        'is_system_generated' => $is_system_generated
+    ]);
     wp_die();
 }
 add_action('wp_ajax_add_prospect_note', 'add_prospect_note');
@@ -262,7 +268,7 @@ function display_prospect_notes($atts) {
         foreach ($notes as $note) {
             $user_info = get_user_by('login', $note->user);
             $user_name = $user_info ? $user_info->first_name . ' ' . $user_info->last_name : $note->user;
-            $note_class = (strpos($note->note, 'changed') !== false) ? 'system-generated' : '';
+            $note_class = (strpos($note->note, 'moved') !== false) ? 'system-generated' : '';
             $display_name = $note_class ? 'System' : esc_html($user_name);
             echo '<div class="' . $note_class . '">';
             echo '<div class="chat-name">' . $display_name . ':</div> ';
