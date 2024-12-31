@@ -120,8 +120,13 @@ function prospect_profile_page() {
 					processData: false,
 					contentType: false,
 					success: function(response) {
+						var jsonResponse = JSON.parse(response);
+						var noteText = formData.get('note');
+						var noteClass = jsonResponse.is_system_generated ? 'system-generated' : '';
+						var userName = jsonResponse.is_system_generated ? 'System' : '<?php echo $current_user->display_name; ?>';
+
 						// Update the DOM to reflect the new note without reloading
-						$('.prospect-chat').append('<div><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + formData.get('note') + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div> <!--<button class="delete-note" data-note-id="' + response.note_id + '"></button>--></div><div class="chat-seperator"></div>');
+						$('.prospect-chat').append('<div class="' + noteClass + '"><div class="chat-name">' + userName + ':</div> ' + noteText + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div></div><div class="chat-seperator"></div>');
 					}
 				});
 			});
@@ -257,9 +262,10 @@ function display_prospect_notes($atts) {
         foreach ($notes as $note) {
             $user_info = get_user_by('login', $note->user);
             $user_name = $user_info ? $user_info->first_name . ' ' . $user_info->last_name : $note->user;
-            $note_class = (strpos($note->note, 'moved') !== false) ? 'system-generated' : '';
+            $note_class = (strpos($note->note, 'changed') !== false) ? 'system-generated' : '';
+            $display_name = $note_class ? 'System' : esc_html($user_name);
             echo '<div class="' . $note_class . '">';
-            echo '<div class="chat-name">' . esc_html($user_name) . ':</div> ';
+            echo '<div class="chat-name">' . $display_name . ':</div> ';
             echo esc_html($note->note);
             echo ' <div class="chat-timestamp">' . esc_html($note->timestamp) . '</div>';
             if (current_user_can('administrator')) {
