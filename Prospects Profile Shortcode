@@ -255,11 +255,11 @@ function display_prospect_notes($atts) {
     if (!empty($notes)) {
         echo '<div class="prospect-chat">';
         foreach ($notes as $note) {
-            // Add the 'system-generated' class if the note contains certain keywords
-            $is_system_generated = strpos($note->note, 'changed') !== false || strpos($note->note, 'moved') !== false;
-            $note_class = $is_system_generated ? 'system-generated' : '';
+            $user_info = get_user_by('login', $note->user);
+            $user_name = $user_info ? $user_info->first_name . ' ' . $user_info->last_name : $note->user;
+            $note_class = (strpos($note->note, 'moved') !== false) ? 'system-generated' : '';
             echo '<div class="' . $note_class . '">';
-            echo '<div class="chat-name">' . esc_html($note->user) . ':</div> ';
+            echo '<div class="chat-name">' . esc_html($user_name) . ':</div> ';
             echo esc_html($note->note);
             echo ' <div class="chat-timestamp">' . esc_html($note->timestamp) . '</div>';
             if (current_user_can('administrator')) {
