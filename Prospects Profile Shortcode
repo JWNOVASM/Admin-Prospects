@@ -115,41 +115,57 @@ function prospect_profile_page() {
                 });
             });
 
-            // Update status, temperature, and account manager
-            $('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').change(function() {
-                var select = $(this);
-                var oldValue = select.data('old-value');
-                var newValue = select.val();
-                var field = select.attr('id').replace('prospect_', '');
-                var fieldName = select.prev('strong').text().replace(':', '');
+            // Set the data-old-value attributes on page load
+			$('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').each(function() {
+				$(this).data('old-value', $(this).val());
+			});
 
-                if (oldValue !== newValue) {
-                    var formData = {
-                        action: 'update_prospect_field',
-                        prospect_id: <?php echo $prospect_id; ?>,
-                        field: field,
-                        value: newValue,
-                        nonce: '<?php echo wp_create_nonce('update_prospect_nonce'); ?>'
-                    };
+			// Handle select changes and add notes
+			$('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').on('change', function() {
+				let selectElement = $(this);
+				let oldValue = selectElement.data('old-value');
+				let newValue = selectElement.val();
+				selectElement.data('old-value', newValue); // Update the old value data attribute
 
-                    $.post('<?php echo admin_url('admin-ajax.php'); ?>', formData, function(response) {
-                        if (response === 'success') {
-                            var oldName = oldValue === '0' ? 'Unassigned' : $('#prospect_account_manager option[value="' + oldValue + '"]').text();
-                            var newName = newValue === '0' ? 'Unassigned' : $('#prospect_account_manager option[value="' + newValue + '"]').text();
-                            var noteText = '<?php echo $current_user->display_name; ?> changed ' + fieldName + ' from ' + oldName + ' to ' + newName;
-                            $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-                                action: 'add_prospect_note',
-                                prospect_id: <?php echo $prospect_id; ?>,
-                                note: noteText,
-                                nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
-                            }, function(noteResponse) {
-                                // Update the DOM to reflect the new note without reloading
-                                $('.prospect-chat').append('<div><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + noteText + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div> <!--<button class="delete-note" data-note-id="' + noteResponse.note_id + '"></button>--></div><div class="chat-seperator"></div>');
-                            });
-                        }
-                    });
-                }
-            });
+				let field = selectElement.attr('id').replace('prospect_', '');
+				let fieldName = selectElement.closest('.detail').find('.detail-label').text().replace(':', '');
+
+				if (oldValue !== newValue) {
+					let formData = {
+						action: 'update_prospect_field',
+						prospect_id: <?php echo json_encode($prospect_id); ?>,
+						field: field,
+						value: newValue,
+						nonce: '<?php echo wp_create_nonce('update_prospect_nonce'); ?>'
+					};
+
+					$.post('<?php echo admin_url('admin-ajax.php'); ?>', formData, function(response) {
+						if (response === 'success') {
+							let oldText = oldValue === '0' ? 'Unassigned' : oldValue;
+							let newText = newValue === '0' ? 'Unassigned' : newValue;
+							if (field === 'account_manager') {
+								oldText = $('#prospect_account_manager option[value="' + oldValue + '"]').text();
+								newText = $('#prospect_account_manager option[value="' + newValue + '"]').text();
+							}
+							let noteText = '<?php echo $current_user->display_name; ?> changed ' + fieldName + ' from ' + oldText + ' to ' + newText;
+
+							$.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+								action: 'add_prospect_note',
+								prospect_id: <?php echo json_encode($prospect_id); ?>,
+								note: noteText,
+								nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
+							}, function(noteResponse) {
+								$('.prospect-notes').append('<li class="system-generated"><strong><?php echo $current_user->display_name; ?>:</strong> ' + noteText + ' <em>(<?php echo current_time('mysql'); ?>)</em> <button class="delete-note">Delete</button></li>');
+							});
+						}
+					});
+				}
+			});
+
+			// Initialize DataTables with 100 results per page
+			$('#live_prospects, #successful_prospects, #lost_prospects').DataTable({
+				"pageLength": 100
+			});
 
             // Delete notes (only for administrators)
             $('.prospect-notes').on('click', '.delete-note', function() {
