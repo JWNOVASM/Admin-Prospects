@@ -155,16 +155,11 @@ function prospect_profile_page() {
 								note: noteText,
 								nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
 							}, function(noteResponse) {
-								$('.prospect-notes').append('<li class="system-generated"><strong><?php echo $current_user->display_name; ?>:</strong> ' + noteText + ' <em>(<?php echo current_time('mysql'); ?>)</em> <button class="delete-note">Delete</button></li>');
+								$('.prospect-chat').append('<div class="system-generated"><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + noteText + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div> <!--<button class="delete-note">Delete</button>--></div>');
 							});
 						}
 					});
 				}
-			});
-
-			// Initialize DataTables with 100 results per page
-			$('#live_prospects, #successful_prospects, #lost_prospects').DataTable({
-				"pageLength": 100
 			});
 
             // Delete notes (only for administrators)
