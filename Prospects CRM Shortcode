@@ -380,21 +380,13 @@ function render_prospects_shortcode() {
 				if (status === 'lost') {
 					noteText += ` with reason: ${reasonForLoss}`;
 				}
-				$.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-					action: 'add_prospect_note',
-					prospect_id: formData.get('id'),
-					note: noteText,
-					nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
-				}, function(noteResponse) {
-					$('.prospect-notes').append('<li class="system-generated"><strong>' + formData.get('username') + ':</strong> ' + noteText + ' <em>(<?php echo current_time('mysql'); ?>)</em> <button class="delete-note">Delete</button></li>');
-				});
 			})
 			.catch(error => console.error('Error:', error));
 		}
 
-		// Handle select changes and add notes
-		var prospectId = <?php echo json_encode($prospect_id); ?>; // Correctly pass the prospect_id as a JavaScript variable
-
+    	// Handle select changes and add notes
+    	var prospectId = <?php echo json_encode($prospect_id); ?>; // Correctly pass the prospect_id as a JavaScript variable
+		
 		$('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').on('change', function() {
 			let selectElement = $(this);
 			let oldValue = selectElement.data('old-value');
