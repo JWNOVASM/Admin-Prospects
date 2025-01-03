@@ -109,14 +109,14 @@ function prospect_profile_page() {
 				<h3>Send E-mail</h3>
 				<form id="prospect-mail-form">
 					<label for="mail-to">To:</label>
-					<input id="mail-to" type="email">
+					<input id="mail-to" type="email" value="<?php echo esc_html($prospect->email); ?>">
 					<label for="mail-from">From:</label>
 					<select id="mail-from" type="email">
 						<option value="0">TBC</option>
 						<option value="0">TBC</option>
 					</select>
 					<label for="mail-from-name">From name:</label>
-					<input id="mail-from-name" type="email">
+					<input id="mail-from-name" type="email" value="<?php echo $current_user->display_name; ?>">
 					<label for="mail-subject">Subject:</label>
 					<input id="mail-subject" type="text">
 					<label for="mail-message">Message:</label>
