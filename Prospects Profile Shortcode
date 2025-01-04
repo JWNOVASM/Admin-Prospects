@@ -276,11 +276,25 @@ function prospect_profile_page() {
 					nonce: '<?php echo wp_create_nonce('send_mail_nonce'); ?>'
 				};
 
-				$.post('<?php echo admin_url('admin-ajax.php'); ?>', formData, function(response) {
-					if (response === 'success') {
-						alert('Email sent successfully.');
-					} else {
+				console.log('Form Data:', formData); // Debugging log
+
+				$.ajax({
+					url: '<?php echo admin_url('admin-ajax.php'); ?>',
+					type: 'POST',
+					data: formData,
+					success: function(response) {
+						console.log('AJAX success:', response); // Debugging log
+						if (response === 'success') {
+							alert('Email sent successfully.');
+						} else {
+							alert('Error sending email. Please try again.');
+							console.error('Error response:', response);
+						}
+					},
+					error: function(xhr, status, error) {
 						alert('Error sending email. Please try again.');
+						console.error('AJAX error:', status, error);
+						console.error('Response:', xhr.responseText);
 					}
 				});
 			});
@@ -419,19 +433,26 @@ function delete_prospect() {
 add_action('wp_ajax_delete_prospect', 'delete_prospect');
 
 function send_prospect_mail() {
+    error_log('send_prospect_mail called'); // Log function call
+
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'send_mail_nonce')) {
+        error_log('Invalid nonce');
         die('Invalid nonce');
     }
 
     $to = sanitize_email($_POST['to']);
-    $from = 'noreply@news.kliko.co.uk'; // Use the marketing domain
+    $from = 'noreply@news.kliko.co.uk';  // Use the marketing domain
     $from_name = sanitize_text_field($_POST['from_name']);
-    $reply_to = sanitize_email($_POST['from']); // Use the selected email
+    $reply_to = sanitize_email($_POST['from']);
     $subject = sanitize_text_field($_POST['subject']);
     $message = sanitize_textarea_field($_POST['message']);
+    $prospect_id = intval($_POST['prospect_id']);
+
+    // Debugging: Log received data
+    error_log("Received Data: " . print_r($_POST, true));
 
     $api_url = 'https://api.sendinblue.com/v3/smtp/email';
-    $api_key = 'API Code';
+    $api_key = 'API CODE';
 
     $body = array(
         'sender' => array('name' => $from_name, 'email' => $from),
@@ -449,6 +470,9 @@ function send_prospect_mail() {
         ),
         'body' => json_encode($body)
     ));
+
+    // Debugging: Log response
+    error_log("Response: " . print_r($response, true));
 
     if (is_wp_error($response)) {
         echo 'error: ' . $response->get_error_message();
@@ -470,7 +494,6 @@ function send_prospect_mail() {
 
             global $wpdb;
             $table_name = $wpdb->prefix . 'prospect_notes';
-            $prospect_id = intval($_POST['prospect_id']);
             $wpdb->insert($table_name, [
                 'prospect_id' => $prospect_id,
                 'note' => $note_content,
