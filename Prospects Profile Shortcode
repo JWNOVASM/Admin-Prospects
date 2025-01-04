@@ -1,4 +1,6 @@
 function prospect_profile_page() {
+	
+	// Variables
     if (!current_user_can('administrator') && !current_user_can('account_manager')) {
         return 'You do not have permission to view this page.';
     }
@@ -31,6 +33,7 @@ function prospect_profile_page() {
 
     ob_start();
     ?>
+	<!-- HTML content -->
     <div class="prospect-profile">
 		<div id="return-to-admin-cont">
 			<a id="return-to-admin" href="/prospects">
@@ -111,10 +114,7 @@ function prospect_profile_page() {
 					<label for="mail-to">To:</label>
 					<input id="mail-to" type="email" value="<?php echo esc_html($prospect->email); ?>">
 					<label for="mail-from">From:</label>
-					<select id="mail-from" type="email">
-						<option value="0">TBC</option>
-						<option value="0">TBC</option>
-					</select>
+					<select id="mail-from" type="email"></select>
 					<label for="mail-from-name">From name:</label>
 					<input id="mail-from-name" type="email" value="<?php echo $current_user->display_name; ?>">
 					<label for="mail-subject">Subject:</label>
@@ -128,6 +128,7 @@ function prospect_profile_page() {
     </div>
     <script>
         jQuery(document).ready(function($) {
+			// Add notes
 			$('#add_note_form').on('submit', function(event) {
 				event.preventDefault();
 
@@ -243,6 +244,46 @@ function prospect_profile_page() {
 			if (notesContainer[0].scrollHeight > notesContainer.height()) {
 				notesContainer.scrollTop(notesContainer[0].scrollHeight);
 			}
+			
+			// Populate the mail-from select options
+			var currentUserEmail = '<?php echo wp_get_current_user()->user_email; ?>';
+			var mailFromSelect = $('#mail-from');
+			mailFromSelect.append(new Option(currentUserEmail, currentUserEmail));
+			mailFromSelect.append(new Option('support@kliko.co.uk', 'support@kliko.co.uk'));
+			mailFromSelect.append(new Option('noreply@mail.kliko.co.uk', 'noreply@mail.kliko.co.uk'));
+
+			<?php if (current_user_can('administrator')): ?>
+				<?php
+				$accountManagers = get_users(array('role' => 'account_manager'));
+				foreach ($accountManagers as $accountManager) {
+					$email = esc_html($accountManager->user_email);
+					echo "mailFromSelect.append(new Option('$email', '$email'));";
+				}
+				?>
+			<?php endif; ?>
+
+			// Handle form submission
+			$('#prospect-mail-form').on('submit', function(event) {
+				event.preventDefault();
+
+				var formData = {
+					action: 'send_prospect_mail',
+					to: $('#mail-to').val(),
+					from: $('#mail-from').val(),
+					from_name: $('#mail-from-name').val(),
+					subject: $('#mail-subject').val(),
+					message: $('#mail-message').val(),
+					nonce: '<?php echo wp_create_nonce('send_mail_nonce'); ?>'
+				};
+
+				$.post('<?php echo admin_url('admin-ajax.php'); ?>', formData, function(response) {
+					if (response === 'success') {
+						alert('Email sent successfully.');
+					} else {
+						alert('Error sending email. Please try again.');
+					}
+				});
+			});
 		});
     </script>
     <?php
@@ -376,3 +417,28 @@ function delete_prospect() {
     wp_die();
 }
 add_action('wp_ajax_delete_prospect', 'delete_prospect');
+
+function send_prospect_mail() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'send_mail_nonce')) {
+        die('Invalid nonce');
+    }
+
+    $to = sanitize_email($_POST['to']);
+    $from = sanitize_email($_POST['from']);
+    $from_name = sanitize_text_field($_POST['from_name']);
+    $subject = sanitize_text_field($_POST['subject']);
+    $message = sanitize_textarea_field($_POST['message']);
+
+    $headers = array('Content-Type: text/html; charset=UTF-8', "From: $from_name <$from>");
+
+    $mail_sent = wp_mail($to, $subject, $message, $headers);
+
+    if ($mail_sent) {
+        echo 'success';
+    } else {
+        echo 'error';
+    }
+
+    wp_die();
+}
+add_action('wp_ajax_send_prospect_mail', 'send_prospect_mail');
