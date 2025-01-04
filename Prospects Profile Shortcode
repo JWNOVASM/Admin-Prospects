@@ -281,6 +281,18 @@ function prospect_profile_page() {
 				$.post('<?php echo admin_url('admin-ajax.php'); ?>', formData, function(response) {
 					if (response === 'success') {
 						alert('Email sent successfully.');
+
+						// Add the note dynamically
+						var noteContent = `
+							<div class="system-mail-log">
+								<div class="mail-note-name">${formData.from_name}</div>
+								<div class="mail-note-content">Content: ${formData.message}</div>
+								<div class="">From: ${formData.from}</div>
+								<div class="">From name: ${formData.from_name}</div>
+								<div class="chat-timestamp">${new Date().toISOString().slice(0, 19).replace('T', ' ')}</div>
+							</div>`;
+
+						$('.prospect-chat').append(noteContent);
 					} else {
 						alert('Error sending email. Please try again.');
 					}
@@ -440,7 +452,7 @@ function send_prospect_mail() {
     }
 
     $api_url = 'https://api.sendinblue.com/v3/smtp/email';
-    $api_key = 'API_KEY';
+    $api_key = 'API_KEY_HERE';
 
     $body = array(
         'sender' => array('name' => $from_name, 'email' => $from),
@@ -469,7 +481,7 @@ function send_prospect_mail() {
         if (isset($decoded_body['messageId'])) {
             // Add system-generated note
             $current_user = wp_get_current_user();
-            $note_content = '<div class="">
+            $note_content = '<div class="system-mail-log">
                                 <div class="mail-note-name">' . esc_html($current_user->first_name . ' ' . $current_user->last_name) . '</div>
                                 <div class="mail-note-content">Content: ' . esc_html($message) . '</div>
                                 <div class="">From: ' . esc_html($reply_to) . '</div>
