@@ -116,7 +116,7 @@ function prospect_profile_page() {
 					<label for="mail-from">From:</label>
 					<select id="mail-from" type="email"></select>
 					<label for="mail-from-name">From name:</label>
-					<input id="mail-from-name" type="email" value="<?php echo $current_user->display_name; ?>">
+					<input id="mail-from-name" type="text" value="<?php echo $current_user->display_name; ?>">
 					<label for="mail-subject">Subject:</label>
 					<input id="mail-subject" type="text">
 					<label for="mail-message">Message:</label>
@@ -424,19 +424,43 @@ function send_prospect_mail() {
     }
 
     $to = sanitize_email($_POST['to']);
-    $from = sanitize_email($_POST['from']);
+    $from = 'noreply@news.kliko.co.uk'; // Use the marketing domain
     $from_name = sanitize_text_field($_POST['from_name']);
+    $reply_to = sanitize_email($_POST['from']); // Use the selected email
     $subject = sanitize_text_field($_POST['subject']);
     $message = sanitize_textarea_field($_POST['message']);
 
-    $headers = array('Content-Type: text/html; charset=UTF-8', "From: $from_name <$from>");
+    $api_url = 'https://api.sendinblue.com/v3/smtp/email';
+    $api_key = 'API CODE';
 
-    $mail_sent = wp_mail($to, $subject, $message, $headers);
+    $body = array(
+        'sender' => array('name' => $from_name, 'email' => $from),
+        'to' => array(array('email' => $to)),
+        'subject' => $subject,
+        'htmlContent' => $message,
+        'replyTo' => array('email' => $reply_to), // Set the reply-to email
+        'tags' => array('Prospect Email')
+    );
 
-    if ($mail_sent) {
-        echo 'success';
+    $response = wp_remote_post($api_url, array(
+        'headers' => array(
+            'Content-Type' => 'application/json',
+            'api-key' => $api_key
+        ),
+        'body' => json_encode($body)
+    ));
+
+    if (is_wp_error($response)) {
+        echo 'error: ' . $response->get_error_message();
     } else {
-        echo 'error';
+        $response_body = wp_remote_retrieve_body($response);
+        $decoded_body = json_decode($response_body, true);
+
+        if (isset($decoded_body['messageId'])) {
+            echo 'success';
+        } else {
+            echo 'error: ' . $response_body;
+        }
     }
 
     wp_die();
