@@ -276,25 +276,11 @@ function prospect_profile_page() {
 					nonce: '<?php echo wp_create_nonce('send_mail_nonce'); ?>'
 				};
 
-				console.log('Form Data:', formData); // Debugging log
-
-				$.ajax({
-					url: '<?php echo admin_url('admin-ajax.php'); ?>',
-					type: 'POST',
-					data: formData,
-					success: function(response) {
-						console.log('AJAX success:', response); // Debugging log
-						if (response === 'success') {
-							alert('Email sent successfully.');
-						} else {
-							alert('Error sending email. Please try again.');
-							console.error('Error response:', response);
-						}
-					},
-					error: function(xhr, status, error) {
+				$.post('<?php echo admin_url('admin-ajax.php'); ?>', formData, function(response) {
+					if (response === 'success') {
+						alert('Email sent successfully.');
+					} else {
 						alert('Error sending email. Please try again.');
-						console.error('AJAX error:', status, error);
-						console.error('Response:', xhr.responseText);
 					}
 				});
 			});
@@ -433,33 +419,26 @@ function delete_prospect() {
 add_action('wp_ajax_delete_prospect', 'delete_prospect');
 
 function send_prospect_mail() {
-    error_log('send_prospect_mail called'); // Log function call
-
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'send_mail_nonce')) {
-        error_log('Invalid nonce');
         die('Invalid nonce');
     }
 
     $to = sanitize_email($_POST['to']);
-    $from = 'noreply@news.kliko.co.uk';  // Use the marketing domain
+    $from = 'noreply@news.kliko.co.uk'; // Use the marketing domain
     $from_name = sanitize_text_field($_POST['from_name']);
-    $reply_to = sanitize_email($_POST['from']);
+    $reply_to = sanitize_email($_POST['from']); // Use the selected email
     $subject = sanitize_text_field($_POST['subject']);
     $message = sanitize_textarea_field($_POST['message']);
-    $prospect_id = intval($_POST['prospect_id']);
-
-    // Debugging: Log received data
-    error_log("Received Data: " . print_r($_POST, true));
 
     $api_url = 'https://api.sendinblue.com/v3/smtp/email';
-    $api_key = 'API CODE';
+    $api_key = 'API KEY';
 
     $body = array(
         'sender' => array('name' => $from_name, 'email' => $from),
         'to' => array(array('email' => $to)),
         'subject' => $subject,
         'htmlContent' => $message,
-        'replyTo' => array('email' => $reply_to),
+        'replyTo' => array('email' => $reply_to), // Set the reply-to email
         'tags' => array('Prospect Email')
     );
 
@@ -471,9 +450,6 @@ function send_prospect_mail() {
         'body' => json_encode($body)
     ));
 
-    // Debugging: Log response
-    error_log("Response: " . print_r($response, true));
-
     if (is_wp_error($response)) {
         echo 'error: ' . $response->get_error_message();
     } else {
@@ -481,26 +457,6 @@ function send_prospect_mail() {
         $decoded_body = json_decode($response_body, true);
 
         if (isset($decoded_body['messageId'])) {
-            // Add note with email details
-            $current_user = wp_get_current_user();
-            $note_content = '<div class="mail-sent">';
-            $note_content .= '<div class="mail-note-name">' . esc_html($current_user->first_name . ' ' . $current_user->last_name) . '</div>';
-            $note_content .= '<div class="">Subject: ' . esc_html($subject) . '</div>';
-            $note_content .= '<div class="mail-note-content">Content: ' . esc_html($message) . '</div>';
-            $note_content .= '<div class="">From: ' . esc_html($reply_to) . '</div>';
-            $note_content .= '<div class="">From name: ' . esc_html($from_name) . '</div>';
-            $note_content .= '<div class="mail-timestamp">' . current_time('mysql') . '</div>';
-            $note_content .= '</div>';
-
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'prospect_notes';
-            $wpdb->insert($table_name, [
-                'prospect_id' => $prospect_id,
-                'note' => $note_content,
-                'user' => $current_user->user_login,
-                'timestamp' => current_time('mysql')
-            ]);
-
             echo 'success';
         } else {
             echo 'error: ' . $response_body;
@@ -509,3 +465,4 @@ function send_prospect_mail() {
 
     wp_die();
 }
+add_action('wp_ajax_send_prospect_mail', 'send_prospect_mail');
