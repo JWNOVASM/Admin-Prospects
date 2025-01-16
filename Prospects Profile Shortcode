@@ -334,17 +334,17 @@ function add_prospect_note() {
         die('Note is empty');
     }
 
+    $is_system_generated = (isset($_POST['is_system_generated']) && $_POST['is_system_generated'] === 'true');
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospect_notes';
     $wpdb->insert($table_name, [
         'prospect_id' => $prospect_id,
         'note' => $note,
         'user' => $user->user_login,
-        'timestamp' => current_time('mysql')
+        'timestamp' => current_time('mysql'),
+        'is_system_generated' => $is_system_generated
     ]);
-
-    // Determine if the note is system-generated
-    $is_system_generated = strpos($note, 'moved') !== false;
 
     echo json_encode([
         'note_id' => $wpdb->insert_id,
@@ -387,8 +387,8 @@ function display_prospect_notes($atts) {
         foreach ($notes as $note) {
             $user_info = get_user_by('login', $note->user);
             $user_name = $user_info ? $user_info->first_name . ' ' . $user_info->last_name : $note->user;
-            $note_class = (strpos($note->note, 'moved') !== false || strpos($note->note, 'System') !== false) ? 'system-generated' : 'note-container';
-            $display_name = $note_class === 'system-generated' ? 'System' : esc_html($user_name);
+            $note_class = $note->is_system_generated ? 'system-generated' : '';
+            $display_name = $note_class ? 'System' : esc_html($user_name);
             echo '<div class="' . $note_class . '">';
             echo '<div class="chat-name">' . $display_name . ':</div> ';
             echo esc_html($note->note);
