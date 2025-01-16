@@ -151,7 +151,16 @@ function prospect_profile_page() {
 						var timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
 						// Update the DOM to reflect the new note without reloading
-						$('.prospect-chat').append('<div class="' + noteClass + '"><div class="chat-name">' + userName + ':</div> ' + noteText + ' <div class="chat-timestamp">(' + timestamp + ')</div></div><div class="chat-seperator"></div>');
+						var newNoteHtml = '<div class="note-container ' + noteClass + '">';
+						newNoteHtml += '<div class="chat-name">' + userName + ':</div> ' + noteText;
+						newNoteHtml += ' <div class="chat-timestamp">(' + timestamp + ')</div>';
+
+						<?php if (current_user_can('administrator')): ?>
+						newNoteHtml += ' <button class="delete-note" data-note-id="' + jsonResponse.note_id + '"></button>';
+						<?php endif; ?>
+
+						newNoteHtml += '</div><div class="chat-seperator"></div>';
+						$('.prospect-chat').append(newNoteHtml);
 					}
 				});
 			});
@@ -208,14 +217,18 @@ function prospect_profile_page() {
 				if (confirm('Are you sure you want to delete this note?')) {
 					var noteId = $(this).data('note-id');
 					var nonce = '<?php echo wp_create_nonce('delete_note_nonce'); ?>';
+					var noteElement = $(this).closest('.note-container'); // Store the note element
 
 					$.post('<?php echo admin_url('admin-ajax.php'); ?>', {
 						action: 'delete_prospect_note',
 						note_id: noteId,
 						nonce: nonce
 					}, function(response) {
-						// Update the DOM to remove the deleted note without reloading
-						$(this).parent().remove();
+						if (response === 'success') {
+							noteElement.remove(); // Remove the note element from the DOM
+						} else {
+							alert('Error deleting note. Please try again.');
+						}
 					});
 				}
 			});
