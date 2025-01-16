@@ -389,7 +389,7 @@ function display_prospect_notes($atts) {
             $user_name = $user_info ? $user_info->first_name . ' ' . $user_info->last_name : $note->user;
             $note_class = $note->is_system_generated ? 'system-generated' : '';
             $display_name = $note_class ? 'System' : esc_html($user_name);
-            echo '<div class="' . $note_class . '">';
+            echo '<div class="note-container ' . $note_class . '">';
             echo '<div class="chat-name">' . $display_name . ':</div> ';
             echo esc_html($note->note);
             echo ' <div class="chat-timestamp">' . esc_html($note->timestamp) . '</div>';
@@ -473,7 +473,7 @@ function send_prospect_mail() {
     }
 
     $api_url = 'https://api.sendinblue.com/v3/smtp/email';
-    $api_key = 'my_api_key';
+    $api_key = '';
 
     $body = array(
         'sender' => array('name' => $from_name, 'email' => $from),
