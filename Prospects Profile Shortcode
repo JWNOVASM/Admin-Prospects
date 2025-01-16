@@ -299,7 +299,7 @@ function prospect_profile_page() {
 
 						// Add the note dynamically
 						var noteContent = `
-							<div class="system-mail-log">
+							<div class="system-email">
 								<div class="mail-note-name"><?php echo esc_html($current_user->first_name . ' ' . $current_user->last_name); ?></div>
 								<div class="">Subject: ${formData.subject}</div>
 								<div class="mail-note-content">Content: ${formData.message}</div>
@@ -507,31 +507,30 @@ function send_prospect_mail() {
         $decoded_body = json_decode($response_body, true);
 
         if (isset($decoded_body['messageId'])) {
-            // Add system-generated note
-            $current_user = wp_get_current_user();
-            $note_content = '<div class="system-mail-log">
-                                <div class="mail-note-name">' . $current_user->first_name . ' ' . $current_user->last_name . '</div>
-                                <div class="">Subject: ' . $subject . '</div>
-                                <div class="mail-note-content">Content: ' . $message . '</div>
-                                <div class="">From: ' . $reply_to . '</div>
-                                <div class="">From name: ' . $from_name . '</div>
-                                <div class="chat-timestamp">' . current_time('mysql') . '</div>
-                            </div>';
+			// Add system-generated note
+			$current_user = wp_get_current_user();
+			$note_content = '<div class="system-email">
+								<div class="mail-note-name">' . $current_user->first_name . ' ' . $current_user->last_name . '</div>
+								<div class="">Subject: ' . $subject . '</div>
+								<div class="mail-note-content">Content: ' . $message . '</div>
+								<div class="">From: ' . $reply_to . '</div>
+								<div class="">From name: ' . $from_name . '</div>
+								<div class="chat-timestamp">' . current_time('mysql') . '</div>
+							</div>';
 
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'prospect_notes';
-            $wpdb->insert($table_name, [
-                'prospect_id' => $prospect_id,
-                'note' => $note_content,
-                'user' => $current_user->user_login,
-                'timestamp' => current_time('mysql')
-            ]);
+			global $wpdb;
+			$table_name = $wpdb->prefix . 'prospect_notes';
+			$wpdb->insert($table_name, [
+				'prospect_id' => $prospect_id,
+				'note' => $note_content,
+				'user' => $current_user->user_login,
+				'timestamp' => current_time('mysql')
+			]);
 
-            echo 'success';
-        } else {
-            // error_log('API Response Error: ' . $response_body);
-            echo 'error: ' . $response_body;
-        }
+			echo 'success';
+		} else {
+			echo 'error: ' . $response_body;
+		}
     }
 
     wp_die();
