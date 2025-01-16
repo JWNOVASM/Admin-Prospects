@@ -521,7 +521,6 @@ function move_prospect() {
         if ($status === 'lost') {
             $note .= " with reason: $reason_for_loss";
         }
-        error_log("Moving prospect: is_system_generated = true");
         $wpdb->insert("{$wpdb->prefix}prospect_notes", [
             'prospect_id' => $id,
             'note' => $note,
