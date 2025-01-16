@@ -170,7 +170,7 @@ function prospect_profile_page() {
 				$(this).data('old-value', $(this).val());
 			});
 
-			// Handle select changes and add notes
+			// Handle select changes and add system-generated notes
 			$('#prospect_status, #prospect_temperature, #prospect_account_manager, #prospect_client_type, #prospect_prospect_type').on('change', function() {
 				let selectElement = $(this);
 				let oldValue = selectElement.data('old-value');
@@ -203,9 +203,10 @@ function prospect_profile_page() {
 								action: 'add_prospect_note',
 								prospect_id: <?php echo json_encode($prospect_id); ?>,
 								note: noteText,
+								is_system_generated: 'true', // Set system-generated flag
 								nonce: '<?php echo wp_create_nonce('add_note_nonce'); ?>'
 							}, function(noteResponse) {
-								$('.prospect-chat').append('<div class="system-generated"><div class="chat-name"><?php echo $current_user->display_name; ?>:</div> ' + noteText + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div></div><div class="chat-seperator"></div>');
+								$('.prospect-chat').append('<div class="system-generated"><div class="chat-name">System:</div> ' + noteText + ' <div class="chat-timestamp">(' + new Date().toISOString().slice(0, 19).replace('T', ' ') + ')</div></div><div class="chat-seperator"></div>');
 							});
 						}
 					});
