@@ -133,7 +133,6 @@ function prospect_profile_page() {
 			$('#add_note_form').on('submit', function(event) {
 				event.preventDefault();
 
-				// Create a FormData object from the form
 				var formData = new FormData(this);
 				formData.append('action', 'add_prospect_note');
 
@@ -150,7 +149,6 @@ function prospect_profile_page() {
 						var userName = jsonResponse.is_system_generated ? 'System' : '<?php echo $current_user->display_name; ?>';
 						var timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-						// Update the DOM to reflect the new note without reloading
 						var newNoteHtml = '<div class="note-container ' + noteClass + '">';
 						newNoteHtml += '<div class="chat-name">' + userName + ':</div> ' + noteText;
 						newNoteHtml += ' <div class="chat-timestamp">(' + timestamp + ')</div>';
@@ -218,7 +216,8 @@ function prospect_profile_page() {
 				if (confirm('Are you sure you want to delete this note?')) {
 					var noteId = $(this).data('note-id');
 					var nonce = '<?php echo wp_create_nonce('delete_note_nonce'); ?>';
-					var noteElement = $(this).closest('.note-container'); // Store the note element
+					var noteElement = $(this).closest('.note-container'); 
+					var separatorElement = noteElement.next('.chat-seperator'); // Store the separator element
 
 					$.post('<?php echo admin_url('admin-ajax.php'); ?>', {
 						action: 'delete_prospect_note',
@@ -227,6 +226,7 @@ function prospect_profile_page() {
 					}, function(response) {
 						if (response === 'success') {
 							noteElement.remove(); // Remove the note element from the DOM
+							separatorElement.remove(); // Remove the separator element from the DOM
 						} else {
 							alert('Error deleting note. Please try again.');
 						}
