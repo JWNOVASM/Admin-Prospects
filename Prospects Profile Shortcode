@@ -336,7 +336,7 @@ function add_prospect_note() {
     }
 
     $is_system_generated = isset($_POST['is_system_generated']) && $_POST['is_system_generated'] === 'true';
-    error_log("Adding note: is_system_generated = " . ($is_system_generated ? 'true' : 'false'));
+    // error_log("Adding note: is_system_generated = " . ($is_system_generated ? 'true' : 'false'));
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospect_notes';
@@ -383,7 +383,7 @@ function display_prospect_notes($atts) {
     $table_name = $wpdb->prefix . 'prospect_notes';
     $notes = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_id = %d ORDER BY timestamp ASC", $prospect_id));
 
-    error_log("Retrieved notes for prospect_id $prospect_id: " . print_r($notes, true));
+    // error_log("Retrieved notes for prospect_id $prospect_id: " . print_r($notes, true));
 
     ob_start();
     if (!empty($notes)) {
@@ -394,7 +394,7 @@ function display_prospect_notes($atts) {
             $note_class = $note->is_system_generated ? 'system-generated' : '';
             $display_name = $note_class ? 'System' : esc_html($user_name);
             
-            error_log("Note ID {$note->id}: is_system_generated = {$note->is_system_generated}, note_class = $note_class");
+            // error_log("Note ID {$note->id}: is_system_generated = {$note->is_system_generated}, note_class = $note_class");
 
             echo '<div class="note-container ' . $note_class . '">';
             echo '<div class="chat-name">' . $display_name . ':</div> ';
@@ -462,7 +462,7 @@ add_action('wp_ajax_delete_prospect', 'delete_prospect');
 
 function send_prospect_mail() {
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'send_mail_nonce')) {
-        error_log('Invalid nonce');
+        // error_log('Invalid nonce');
         die('Invalid nonce');
     }
 
@@ -475,7 +475,7 @@ function send_prospect_mail() {
     $prospect_id = isset($_POST['prospect_id']) ? intval($_POST['prospect_id']) : 0;
 
     if ($prospect_id === 0) {
-        error_log('Invalid prospect ID');
+        // error_log('Invalid prospect ID');
         die('Invalid prospect ID');
     }
 
@@ -500,7 +500,7 @@ function send_prospect_mail() {
     ));
 
     if (is_wp_error($response)) {
-        error_log('Error: ' . $response->get_error_message());
+        // error_log('Error: ' . $response->get_error_message());
         echo 'error: ' . $response->get_error_message();
     } else {
         $response_body = wp_remote_retrieve_body($response);
@@ -529,7 +529,7 @@ function send_prospect_mail() {
 
             echo 'success';
         } else {
-            error_log('API Response Error: ' . $response_body);
+            // error_log('API Response Error: ' . $response_body);
             echo 'error: ' . $response_body;
         }
     }
