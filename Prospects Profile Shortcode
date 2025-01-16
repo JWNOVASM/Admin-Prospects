@@ -383,25 +383,21 @@ function display_prospect_notes($atts) {
     $table_name = $wpdb->prefix . 'prospect_notes';
     $notes = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_id = %d ORDER BY timestamp ASC", $prospect_id));
 
-    // error_log("Retrieved notes for prospect_id $prospect_id: " . print_r($notes, true));
-
     ob_start();
     if (!empty($notes)) {
         echo '<div class="prospect-chat">';
         foreach ($notes as $note) {
             $user_info = get_user_by('login', $note->user);
             $user_name = $user_info ? $user_info->first_name . ' ' . $user_info->last_name : $note->user;
-            $note_class = $note->is_system_generated ? 'system-generated' : '';
+            $note_class = $note->is_system_generated ? 'system-email' : '';
             $display_name = $note_class ? 'System' : esc_html($user_name);
-            
-            // error_log("Note ID {$note->id}: is_system_generated = {$note->is_system_generated}, note_class = $note_class");
 
             echo '<div class="note-container ' . $note_class . '">';
             echo '<div class="chat-name">' . $display_name . ':</div> ';
-            echo esc_html($note->note);
+            echo wp_kses_post($note->note);
             echo ' <div class="chat-timestamp">' . esc_html($note->timestamp) . '</div>';
             if (current_user_can('administrator')) {
-                echo ' <button class="delete-note" data-note-id="' . esc_html($note->id) . '"></button>';
+                echo ' <button class="delete-note" data-note-id="' . esc_html($note->id) . '\"></button>';
             }
             echo '</div><div class="chat-seperator"></div>';
         }
@@ -460,9 +456,11 @@ function delete_prospect() {
 }
 add_action('wp_ajax_delete_prospect', 'delete_prospect');
 
+
+
+
 function send_prospect_mail() {
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'send_mail_nonce')) {
-        // error_log('Invalid nonce');
         die('Invalid nonce');
     }
 
@@ -475,7 +473,6 @@ function send_prospect_mail() {
     $prospect_id = isset($_POST['prospect_id']) ? intval($_POST['prospect_id']) : 0;
 
     if ($prospect_id === 0) {
-        // error_log('Invalid prospect ID');
         die('Invalid prospect ID');
     }
 
@@ -500,37 +497,35 @@ function send_prospect_mail() {
     ));
 
     if (is_wp_error($response)) {
-        // error_log('Error: ' . $response->get_error_message());
         echo 'error: ' . $response->get_error_message();
     } else {
         $response_body = wp_remote_retrieve_body($response);
         $decoded_body = json_decode($response_body, true);
 
         if (isset($decoded_body['messageId'])) {
-			// Add system-generated note
-			$current_user = wp_get_current_user();
-			$note_content = '<div class="system-email">
-								<div class="mail-note-name">' . $current_user->first_name . ' ' . $current_user->last_name . '</div>
-								<div class="">Subject: ' . $subject . '</div>
-								<div class="mail-note-content">Content: ' . $message . '</div>
-								<div class="">From: ' . $reply_to . '</div>
-								<div class="">From name: ' . $from_name . '</div>
-								<div class="chat-timestamp">' . current_time('mysql') . '</div>
-							</div>';
+            $current_user = wp_get_current_user();
+            $note_content = '<div class="system-email">
+                                <div class="mail-note-name">' . esc_html($current_user->first_name . ' ' . $current_user->last_name) . '</div>
+                                <div class="">Subject: ' . esc_html($subject) . '</div>
+                                <div class="mail-note-content">Content: ' . esc_html($message) . '</div>
+                                <div class="">From: ' . esc_html($reply_to) . '</div>
+                                <div class="">From name: ' . esc_html($from_name) . '</div>
+                                <div class="chat-timestamp">' . current_time('mysql') . '</div>
+                             </div>';
 
-			global $wpdb;
-			$table_name = $wpdb->prefix . 'prospect_notes';
-			$wpdb->insert($table_name, [
-				'prospect_id' => $prospect_id,
-				'note' => $note_content,
-				'user' => $current_user->user_login,
-				'timestamp' => current_time('mysql')
-			]);
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'prospect_notes';
+            $wpdb->insert($table_name, [
+                'prospect_id' => $prospect_id,
+                'note' => wp_kses_post($note_content),
+                'user' => $current_user->user_login,
+                'timestamp' => current_time('mysql')
+            ]);
 
-			echo 'success';
-		} else {
-			echo 'error: ' . $response_body;
-		}
+            echo 'success';
+        } else {
+            echo 'error: ' . $response_body;
+        }
     }
 
     wp_die();
