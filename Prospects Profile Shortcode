@@ -148,9 +148,10 @@ function prospect_profile_page() {
 						var noteText = formData.get('note');
 						var noteClass = jsonResponse.is_system_generated ? 'system-generated' : '';
 						var userName = jsonResponse.is_system_generated ? 'System' : '<?php echo $current_user->display_name; ?>';
+						var timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
 						// Update the DOM to reflect the new note without reloading
-						$('.prospect-chat').append('<div class="' + noteClass + '"><div class="chat-name">' + userName + ':</div> ' + noteText + ' <div class="chat-timestamp">(<?php echo current_time('mysql'); ?>)</div></div><div class="chat-seperator"></div>');
+						$('.prospect-chat').append('<div class="' + noteClass + '"><div class="chat-name">' + userName + ':</div> ' + noteText + ' <div class="chat-timestamp">(' + timestamp + ')</div></div><div class="chat-seperator"></div>');
 					}
 				});
 			});
@@ -356,7 +357,7 @@ function delete_prospect_note() {
 }
 add_action('wp_ajax_delete_prospect_note', 'delete_prospect_note');
 
-/* function display_prospect_notes($atts) {
+function display_prospect_notes($atts) {
     $prospect_id = intval($atts['prospect_id']);
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospect_notes';
@@ -376,35 +377,6 @@ add_action('wp_ajax_delete_prospect_note', 'delete_prospect_note');
             echo ' <div class="chat-timestamp">' . esc_html($note->timestamp) . '</div>';
             if (current_user_can('administrator')) {
                 echo ' <button class="delete-note" data-note-id="' . esc_html($note->id) . '"></button>';
-            }
-            echo '</div><div class="chat-seperator"></div>';
-        }
-        echo '</div>';
-    } else {
-        echo '<p>No notes available.</p>';
-    }
-    return ob_get_clean();
-}
-add_shortcode('prospect_notes', 'display_prospect_notes');
-*/
-function display_prospect_notes($atts) {
-    $prospect_id = intval($atts['prospect_id']);
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'prospect_notes';
-    $notes = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_id = %d ORDER BY timestamp ASC", $prospect_id));
-
-    ob_start();
-    if (!empty($notes)) {
-        echo '<div class="prospect-chat">';
-        foreach ($notes as $note) {
-            $user_info = get_user_by('login', $note->user);
-            $user_name = $user_info ? $user_info->first_name . ' ' . $user_info->last_name : $note->user;
-            $note_class = (strpos($note->note, 'moved') !== false) ? 'system-generated' : '';
-            $display_name = $note_class ? 'System' : $user_name;
-            echo '<div class="' . $note_class . '">';
-            echo $note->note;
-            if (current_user_can('administrator')) {
-                echo ' <button class="delete-note" data-note-id="' . $note->id . '"></button>';
             }
             echo '</div><div class="chat-seperator"></div>';
         }
