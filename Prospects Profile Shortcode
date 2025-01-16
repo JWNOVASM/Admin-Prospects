@@ -334,7 +334,8 @@ function add_prospect_note() {
         die('Note is empty');
     }
 
-    $is_system_generated = (isset($_POST['is_system_generated']) && $_POST['is_system_generated'] === 'true');
+    $is_system_generated = (isset($_POST['is_system_generated']) && $_POST['is_system_generated'] === 'true') ? 1 : 0;
+    error_log("Adding note: is_system_generated = " . ($is_system_generated ? 'true' : 'false'));
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospect_notes';
@@ -381,6 +382,8 @@ function display_prospect_notes($atts) {
     $table_name = $wpdb->prefix . 'prospect_notes';
     $notes = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_id = %d ORDER BY timestamp ASC", $prospect_id));
 
+    error_log("Retrieved notes for prospect_id $prospect_id: " . print_r($notes, true));
+
     ob_start();
     if (!empty($notes)) {
         echo '<div class="prospect-chat">';
@@ -389,6 +392,9 @@ function display_prospect_notes($atts) {
             $user_name = $user_info ? $user_info->first_name . ' ' . $user_info->last_name : $note->user;
             $note_class = $note->is_system_generated ? 'system-generated' : '';
             $display_name = $note_class ? 'System' : esc_html($user_name);
+            
+            error_log("Note ID {$note->id}: is_system_generated = {$note->is_system_generated}, note_class = $note_class");
+
             echo '<div class="note-container ' . $note_class . '">';
             echo '<div class="chat-name">' . $display_name . ':</div> ';
             echo esc_html($note->note);
