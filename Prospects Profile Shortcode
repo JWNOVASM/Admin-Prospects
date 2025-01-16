@@ -356,16 +356,21 @@ add_action('wp_ajax_add_prospect_note', 'add_prospect_note');
 
 function delete_prospect_note() {
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'delete_note_nonce')) {
-        die('Invalid nonce');
+        echo 'Invalid nonce';
+        wp_die();
     }
 
     $note_id = intval($_POST['note_id']);
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospect_notes';
-    $wpdb->delete($table_name, ['id' => $note_id]);
+    $deleted = $wpdb->delete($table_name, ['id' => $note_id]);
 
-    echo 'Note deleted successfully';
+    if ($deleted) {
+        echo 'success';
+    } else {
+        echo 'error';
+    }
     wp_die();
 }
 add_action('wp_ajax_delete_prospect_note', 'delete_prospect_note');
