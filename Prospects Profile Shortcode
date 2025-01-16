@@ -356,7 +356,7 @@ function delete_prospect_note() {
 }
 add_action('wp_ajax_delete_prospect_note', 'delete_prospect_note');
 
-function display_prospect_notes($atts) {
+/* function display_prospect_notes($atts) {
     $prospect_id = intval($atts['prospect_id']);
     global $wpdb;
     $table_name = $wpdb->prefix . 'prospect_notes';
@@ -376,6 +376,35 @@ function display_prospect_notes($atts) {
             echo ' <div class="chat-timestamp">' . esc_html($note->timestamp) . '</div>';
             if (current_user_can('administrator')) {
                 echo ' <button class="delete-note" data-note-id="' . esc_html($note->id) . '"></button>';
+            }
+            echo '</div><div class="chat-seperator"></div>';
+        }
+        echo '</div>';
+    } else {
+        echo '<p>No notes available.</p>';
+    }
+    return ob_get_clean();
+}
+add_shortcode('prospect_notes', 'display_prospect_notes');
+*/
+function display_prospect_notes($atts) {
+    $prospect_id = intval($atts['prospect_id']);
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'prospect_notes';
+    $notes = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE prospect_id = %d ORDER BY timestamp ASC", $prospect_id));
+
+    ob_start();
+    if (!empty($notes)) {
+        echo '<div class="prospect-chat">';
+        foreach ($notes as $note) {
+            $user_info = get_user_by('login', $note->user);
+            $user_name = $user_info ? $user_info->first_name . ' ' . $user_info->last_name : $note->user;
+            $note_class = (strpos($note->note, 'moved') !== false) ? 'system-generated' : '';
+            $display_name = $note_class ? 'System' : $user_name;
+            echo '<div class="' . $note_class . '">';
+            echo $note->note;
+            if (current_user_can('administrator')) {
+                echo ' <button class="delete-note" data-note-id="' . $note->id . '"></button>';
             }
             echo '</div><div class="chat-seperator"></div>';
         }
@@ -454,7 +483,7 @@ function send_prospect_mail() {
     }
 
     $api_url = 'https://api.sendinblue.com/v3/smtp/email';
-    $api_key = 'API_KEY';
+    $api_key = 'my_api_key';
 
     $body = array(
         'sender' => array('name' => $from_name, 'email' => $from),
@@ -484,14 +513,13 @@ function send_prospect_mail() {
             // Add system-generated note
             $current_user = wp_get_current_user();
             $note_content = '<div class="system-mail-log">
-                                <div class="mail-note-name">' . esc_html($current_user->first_name . ' ' . $current_user->last_name) . '</div>
-                                <div class="">Subject: ' . esc_html($subject) . '</div>
-                                <div class="mail-note-content">Content: ' . esc_html($message) . '</div>
-                                <div class="">From: ' . esc_html($reply_to) . '</div>
-                                <div class="">From name: ' . esc_html($from_name) . '</div>
+                                <div class="mail-note-name">' . $current_user->first_name . ' ' . $current_user->last_name . '</div>
+                                <div class="">Subject: ' . $subject . '</div>
+                                <div class="mail-note-content">Content: ' . $message . '</div>
+                                <div class="">From: ' . $reply_to . '</div>
+                                <div class="">From name: ' . $from_name . '</div>
                                 <div class="chat-timestamp">' . current_time('mysql') . '</div>
-                            </div>
-							<div class="chat-seperator"></div>';
+                            </div>';
 
             global $wpdb;
             $table_name = $wpdb->prefix . 'prospect_notes';
