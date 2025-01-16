@@ -456,7 +456,6 @@ function delete_prospect() {
 }
 add_action('wp_ajax_delete_prospect', 'delete_prospect');
 
-
 function send_prospect_mail() {
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'send_mail_nonce')) {
         die('Invalid nonce');
