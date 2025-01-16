@@ -525,7 +525,8 @@ function move_prospect() {
             'prospect_id' => $id,
             'note' => $note,
             'user' => $username,
-            'timestamp' => current_time('mysql')
+            'timestamp' => current_time('mysql'),
+            'is_system_generated' => true
         ]);
         echo 'Prospect moved successfully';
     }
